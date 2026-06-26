@@ -13,6 +13,7 @@ interface ChatStore {
   createConversation: (title?: string) => Promise<number>;
   deleteConversation: (id: number) => Promise<void>;
   setCurrentConvId: (id: number | null) => void;
+  appendMessage: (msg: Message) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -47,5 +48,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     await get().loadConversations();
   },
 
-  setCurrentConvId: (id) => set({ currentConvId: id }),
+  setCurrentConvId: (id) => {
+    if (id === null) {
+      set({ currentConvId: null, messages: [] });
+    } else {
+      set({ currentConvId: id });
+    }
+  },
+
+  appendMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
 }));

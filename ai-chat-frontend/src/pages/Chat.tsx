@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useChatStore } from '../store';
 import { Plus, Trash2, Send, LogOut, MessageSquare, Sparkles, Settings, Brain } from 'lucide-react';
 
@@ -7,7 +9,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const {
     conversations, currentConvId, messages, loading,
-    loadConversations, selectConversation, createConversation, deleteConversation, setCurrentConvId,
+    loadConversations, selectConversation, createConversation, deleteConversation, setCurrentConvId, appendMessage,
   } = useChatStore();
 
   const [input, setInput] = useState('');
@@ -39,6 +41,8 @@ export default function Chat() {
         convId = await createConversation(userMsg.slice(0, 50));
         setCurrentConvId(convId);
       }
+
+      appendMessage({ id: Date.now(), conversationId: convId, role: 'user', content: userMsg, thinking: null, createdAt: new Date().toISOString() });
 
       const token = localStorage.getItem('token');
       const res = await fetch('/api/chat/stream', {
@@ -104,7 +108,7 @@ export default function Chat() {
       setStreamContent('');
       setThinkingContent('');
     }
-  }, [input, streaming, currentConvId, createConversation, selectConversation, setCurrentConvId]);
+  }, [input, streaming, currentConvId, createConversation, selectConversation, setCurrentConvId, appendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -181,18 +185,22 @@ export default function Chat() {
                     ? 'bg-[#6366F1] text-white'
                     : 'bg-white/80 backdrop-blur-sm border border-white/20 text-[#1E1B4B]'
                 }`}>
-                  {msg.thinking && (
+                    {msg.thinking && (
                     <details className="mb-2">
                       <summary className="flex items-center gap-1.5 text-xs font-medium text-[#6366F1] cursor-pointer select-none hover:text-[#4F46E5] transition-colors">
                         <Brain className="w-3.5 h-3.5" />
                         Thought
                       </summary>
                       <div className="mt-2 pl-3 border-l-2 border-[#6366F1]/20">
-                        <p className="text-sm text-[#475569] whitespace-pre-wrap leading-relaxed">{msg.thinking}</p>
+                        <div className="prose prose-sm max-w-none text-[#475569]">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.thinking}</ReactMarkdown>
+                        </div>
                       </div>
                     </details>
                   )}
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}
@@ -211,8 +219,8 @@ export default function Chat() {
                     </details>
                   )}
                   {streamContent ? (
-                    <div className="px-4 py-3">
-                      <p className="text-sm text-[#1E1B4B] whitespace-pre-wrap leading-relaxed">{streamContent}</p>
+                    <div className="px-4 py-3 prose prose-sm max-w-none text-[#1E1B4B]">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamContent}</ReactMarkdown>
                     </div>
                   ) : streaming && !thinkingContent && (
                     <div className="px-4 py-4 flex items-center gap-1.5 text-[#6366F1]">
