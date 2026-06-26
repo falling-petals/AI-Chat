@@ -16,5 +16,10 @@ mybatis-plus:
     db-config:
       id-type: auto
 
+logging:
+  level:
+    com.aichat: DEBUG
+    com.alibaba.cloud.ai: DEBUG
+
 jwt:
   expiration: 86400000
