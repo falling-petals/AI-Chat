@@ -149,64 +149,62 @@ export default function Chat() {
       {/* Main chat area */}
       <div className="flex-1 flex flex-col">
         {currentConvId ? (
-          <>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-                    msg.role === 'user'
-                      ? 'bg-[#6366F1] text-white'
-                      : 'bg-white/80 backdrop-blur-sm border border-white/20 text-[#1E1B4B]'
-                  }`}>
-                    {msg.thinking && (
-                      <details className="mb-2">
-                        <summary className="text-xs text-[#64748B] cursor-pointer">Thinking</summary>
-                        <p className="text-sm mt-1 text-[#64748B] whitespace-pre-wrap">{msg.thinking}</p>
-                      </details>
-                    )}
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                  msg.role === 'user'
+                    ? 'bg-[#6366F1] text-white'
+                    : 'bg-white/80 backdrop-blur-sm border border-white/20 text-[#1E1B4B]'
+                }`}>
+                  {msg.thinking && (
+                    <details className="mb-2">
+                      <summary className="text-xs text-[#64748B] cursor-pointer">Thinking</summary>
+                      <p className="text-sm mt-1 text-[#64748B] whitespace-pre-wrap">{msg.thinking}</p>
+                    </details>
+                  )}
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 </div>
-              ))}
-              {streamContent && (
-                <div className="flex justify-start">
-                  <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/20">
-                    <p className="text-sm whitespace-pre-wrap">{streamContent}</p>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="p-4 border-t border-white/20 bg-white/30 backdrop-blur-sm">
-              <div className="flex items-center gap-2 max-w-4xl mx-auto">
-                <input
-                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all"
-                  placeholder={streaming ? 'AI is thinking...' : 'Type a message...'}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={streaming}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={streaming || !input.trim()}
-                  className="p-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
               </div>
-            </div>
-          </>
+            ))}
+            {streamContent && (
+              <div className="flex justify-start">
+                <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/20">
+                  <p className="text-sm whitespace-pre-wrap">{streamContent}</p>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Sparkles className="w-12 h-12 text-[#6366F1]/30 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-[#1E1B4B] mb-2">Start a new conversation</h2>
-              <p className="text-[#64748B] text-sm">Select a conversation or create a new one</p>
+              <p className="text-[#64748B] text-sm">Type a message below to begin</p>
             </div>
           </div>
         )}
+
+        <div className="p-4 border-t border-white/20 bg-white/30 backdrop-blur-sm">
+          <div className="flex items-center gap-2 max-w-4xl mx-auto">
+            <input
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all"
+              placeholder={streaming ? 'AI is thinking...' : 'Type a message...'}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={streaming}
+            />
+            <button
+              onClick={handleSend}
+              disabled={streaming || !input.trim()}
+              className="p-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
