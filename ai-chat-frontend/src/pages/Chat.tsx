@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../store';
-import { Plus, Trash2, Send, LogOut, MessageSquare, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Send, LogOut, MessageSquare, Sparkles, Settings } from 'lucide-react';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -110,9 +110,14 @@ export default function Chat() {
               <MessageSquare className="w-5 h-5 text-[#6366F1]" />
               <span className="font-semibold text-[#1E1B4B]">AI Chat</span>
             </div>
-            <button onClick={handleLogout} className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Logout">
-              <LogOut className="w-4 h-4 text-[#64748B]" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => navigate('/settings')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Settings">
+                <Settings className="w-4 h-4 text-[#64748B]" />
+              </button>
+              <button onClick={handleLogout} className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Logout">
+                <LogOut className="w-4 h-4 text-[#64748B]" />
+              </button>
+            </div>
           </div>
           <button
             onClick={() => { setCurrentConvId(null); setInput(''); }}

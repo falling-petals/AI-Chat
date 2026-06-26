@@ -24,9 +24,15 @@ export const messageApi = {
 export const modelConfigApi = {
   list: () => request<ModelConfig[]>('/model-configs'),
 
-  save: (config: ModelConfig) =>
+  save: (config: Partial<ModelConfig>) =>
     request<void>('/model-configs', {
       method: 'POST',
+      body: JSON.stringify(config),
+    }),
+
+  update: (id: number, config: Partial<ModelConfig>) =>
+    request<void>(`/model-configs/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(config),
     }),
 
