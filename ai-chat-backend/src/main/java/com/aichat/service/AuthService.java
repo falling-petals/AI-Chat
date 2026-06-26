@@ -8,6 +8,7 @@ import com.aichat.mapper.UserMapper;
 import com.aichat.util.JwtUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -43,11 +44,11 @@ public class AuthService {
             return Result.error(400, "Invalid username or password");
         }
         String token = jwtUtil.generate(user.getId(), user.getUsername());
-        return Result.success(Map.of(
-                "token", token,
-                "username", user.getUsername(),
-                "avatar", user.getAvatar()
-        ));
+        Map<String, Object> data = new HashMap<>();
+        data.put("token", token);
+        data.put("username", user.getUsername());
+        data.put("avatar", user.getAvatar());
+        return Result.success(data);
     }
 
     private String hashPassword(String raw) {
