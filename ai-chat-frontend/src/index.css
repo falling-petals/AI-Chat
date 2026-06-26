@@ -20,3 +20,109 @@
 .animation-delay-400 {
   animation-delay: 0.4s;
 }
+
+.prose {
+  line-height: 1.75;
+}
+
+.prose p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose pre {
+  background-color: #1a1a2e !important;
+  border: 1px solid #2d2d4a;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 0.75em 0;
+  overflow-x: auto;
+}
+
+.prose code {
+  font-size: 0.8125rem;
+}
+
+.prose :not(pre) > code {
+  background-color: #f1f0ff;
+  color: #4f46e5;
+  font-weight: 500;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  font-size: 0.8125rem;
+}
+
+.prose pre code {
+  background: transparent;
+  color: #e2e8f0;
+  padding: 0;
+  border-radius: 0;
+  font-weight: 400;
+}
+
+.prose ul, .prose ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose li {
+  margin-top: 0.15em;
+  margin-bottom: 0.15em;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  color: #1e1b4b;
+  margin-top: 1em;
+  margin-bottom: 0.4em;
+}
+
+.prose h1 { font-size: 1.25rem; }
+.prose h2 { font-size: 1.125rem; }
+.prose h3 { font-size: 1rem; }
+.prose h4 { font-size: 0.9375rem; }
+
+.prose blockquote {
+  border-left-color: #6366f1;
+  background-color: #f8f7ff;
+  padding: 0.5em 1em;
+  border-radius: 0 8px 8px 0;
+  margin: 0.75em 0;
+}
+
+.prose table {
+  font-size: 0.8125rem;
+  margin: 0.75em 0;
+}
+
+.prose th {
+  background-color: #f5f3ff;
+  color: #1e1b4b;
+  font-weight: 600;
+  padding: 0.5em 0.75em;
+  border: 1px solid #e2e8f0;
+}
+
+.prose td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #e2e8f0;
+}
+
+.prose a {
+  color: #6366f1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  color: #4f46e5;
+}
+
+.prose hr {
+  margin: 1.25em 0;
+  border-color: #e2e8f0;
+}
+
+.prose img {
+  border-radius: 8px;
+  margin: 0.75em 0;
+}
