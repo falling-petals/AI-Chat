@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../store';
-import { Plus, Trash2, Send, LogOut, MessageSquare, Sparkles, Settings } from 'lucide-react';
+import { Plus, Trash2, Send, LogOut, MessageSquare, Sparkles, Settings, Brain } from 'lucide-react';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -13,29 +13,33 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [streamContent, setStreamContent] = useState('');
+  const [thinkingContent, setThinkingContent] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { loadConversations(); }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamContent]);
+  }, [messages, streamContent, thinkingContent]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || streaming) return;
-
-    let convId = currentConvId;
-    if (!convId) {
-      convId = await createConversation(input.slice(0, 50));
-      setCurrentConvId(convId);
-    }
 
     const userMsg = input;
     setInput('');
     setStreaming(true);
     setStreamContent('');
+    setThinkingContent('');
+    setErrorMessage('');
 
     try {
+      let convId = currentConvId;
+      if (!convId) {
+        convId = await createConversation(userMsg.slice(0, 50));
+        setCurrentConvId(convId);
+      }
+
       const token = localStorage.getItem('token');
       const res = await fetch('/api/chat/stream', {
         method: 'POST',
@@ -46,8 +50,14 @@ export default function Chat() {
         body: JSON.stringify({ conversationId: convId, content: userMsg }),
       });
 
+      if (!res.ok) {
+        throw new Error(`发送失败（HTTP ${res.status}）`);
+      }
+
       const reader = res.body?.getReader();
-      if (!reader) return;
+      if (!reader) {
+        throw new Error('未收到流式响应');
+      }
 
       const decoder = new TextDecoder();
       let buffer = '';
@@ -70,22 +80,31 @@ export default function Chat() {
             const data = line.slice(5);
             if (eventType === 'message') {
               setStreamContent(prev => prev + data);
+            } else if (eventType === 'thinking') {
+              setThinkingContent(prev => prev + data);
             } else if (eventType === 'done') {
               setStreaming(false);
               setStreamContent('');
+              setThinkingContent('');
               await selectConversation(convId!);
             } else if (eventType === 'error') {
+              setErrorMessage(data.trim() || '发送失败，请检查模型配置');
               setStreaming(false);
               setStreamContent('');
+              setThinkingContent('');
             }
           }
         }
       }
       setStreaming(false);
     } catch (err) {
+      const message = err instanceof Error ? err.message : '发送失败，请稍后重试';
+      setErrorMessage(message);
+      setStreaming(false);
       setStreamContent('');
+      setThinkingContent('');
     }
-  }, [input, streaming, currentConvId]);
+  }, [input, streaming, currentConvId, createConversation, selectConversation, setCurrentConvId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -164,18 +183,46 @@ export default function Chat() {
                 }`}>
                   {msg.thinking && (
                     <details className="mb-2">
-                      <summary className="text-xs text-[#64748B] cursor-pointer">Thinking</summary>
-                      <p className="text-sm mt-1 text-[#64748B] whitespace-pre-wrap">{msg.thinking}</p>
+                      <summary className="flex items-center gap-1.5 text-xs font-medium text-[#6366F1] cursor-pointer select-none hover:text-[#4F46E5] transition-colors">
+                        <Brain className="w-3.5 h-3.5" />
+                        Thought
+                      </summary>
+                      <div className="mt-2 pl-3 border-l-2 border-[#6366F1]/20">
+                        <p className="text-sm text-[#475569] whitespace-pre-wrap leading-relaxed">{msg.thinking}</p>
+                      </div>
                     </details>
                   )}
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                 </div>
               </div>
             ))}
-            {streamContent && (
+            {(streaming || streamContent) && (
               <div className="flex justify-start">
-                <div className="max-w-[70%] px-4 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/20">
-                  <p className="text-sm whitespace-pre-wrap">{streamContent}</p>
+                <div className="max-w-[70%] rounded-2xl bg-white/80 backdrop-blur-sm border border-white/20 overflow-hidden">
+                  {thinkingContent && (
+                    <details open className="border-b border-white/10">
+                      <summary className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-[#6366F1] cursor-pointer select-none hover:bg-[#6366F1]/5 transition-colors">
+                        <Brain className="w-3.5 h-3.5" />
+                        {streaming && !streamContent ? 'Thinking...' : 'Thought'}
+                      </summary>
+                      <div className="px-4 pb-3 pt-1 bg-[#6366F1]/[0.02]">
+                        <p className="text-sm text-[#475569] whitespace-pre-wrap leading-relaxed">{thinkingContent}</p>
+                      </div>
+                    </details>
+                  )}
+                  {streamContent ? (
+                    <div className="px-4 py-3">
+                      <p className="text-sm text-[#1E1B4B] whitespace-pre-wrap leading-relaxed">{streamContent}</p>
+                    </div>
+                  ) : streaming && !thinkingContent && (
+                    <div className="px-4 py-4 flex items-center gap-1.5 text-[#6366F1]">
+                      <Brain className="w-4 h-4" />
+                      <span className="text-sm">Thinking</span>
+                      <span className="typing-dot">.</span>
+                      <span className="typing-dot animation-delay-200">.</span>
+                      <span className="typing-dot animation-delay-400">.</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -192,12 +239,23 @@ export default function Chat() {
         )}
 
         <div className="p-4 border-t border-white/20 bg-white/30 backdrop-blur-sm">
-          <div className="flex items-center gap-2 max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-2">
+            {errorMessage && (
+              <div className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-600">
+                {errorMessage}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
             <input
               className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all"
               placeholder={streaming ? 'AI is thinking...' : 'Type a message...'}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                if (errorMessage) {
+                  setErrorMessage('');
+                }
+              }}
               onKeyDown={handleKeyDown}
               disabled={streaming}
             />
@@ -208,6 +266,7 @@ export default function Chat() {
             >
               <Send className="w-5 h-5" />
             </button>
+            </div>
           </div>
         </div>
       </div>

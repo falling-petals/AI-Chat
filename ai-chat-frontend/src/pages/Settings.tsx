@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, Trash2, Check, Settings as SettingsIcon, Eye, EyeOff, 
 import { modelConfigApi } from '../api/chat';
 import type { ModelConfig } from '../types';
 
-const PROVIDERS = ['dashscope', 'openai', 'deepseek'];
+const PROVIDERS = ['dashscope'];
 
 interface FormData {
   provider: string;
@@ -109,7 +109,7 @@ export default function Settings() {
         <div className="max-w-3xl mx-auto space-y-4">
           {/* Info card */}
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-4 text-sm text-[#64748B]">
-            在这里配置你的 API Key 和模型。每个模型需要选择供应商、填写模型名称和 API Key。
+            在这里配置你的 API Key 和模型。当前聊天发送仅支持 dashscope，先填写可用的 DashScope 模型名称和 API Key。
             配置完成后，点击 <Check className="w-3.5 h-3.5 inline text-green-500" /> 设为当前使用的模型。
           </div>
 

@@ -50,6 +50,12 @@ public class ChatService {
             emitter.complete();
             return emitter;
         }
+        if (!"dashscope".equalsIgnoreCase(config.getProvider())) {
+            log.warn("Unsupported provider for streaming: userId={}, provider={}", userId, config.getProvider());
+            sendEvent(emitter, "error", "当前仅支持 dashscope，请在设置中切换到 dashscope 模型");
+            emitter.complete();
+            return emitter;
+        }
         log.debug("Active model config: provider={}, model={}, baseUrl={}", config.getProvider(), config.getModelName(), config.getBaseUrl());
 
         Conversation conv = conversationService.getById(conversationId, userId);
@@ -75,10 +81,10 @@ public class ChatService {
         messages.add(new UserMessage(content));
 
         log.debug("Building DashScopeApi...");
-        DashScopeApi userApi = DashScopeApi.builder()
-                .apiKey(config.getApiKey())
-                .baseUrl(config.getBaseUrl())
-                .build();
+        String baseUrl = config.getBaseUrl();
+        DashScopeApi userApi = (baseUrl != null && !baseUrl.isBlank())
+                ? DashScopeApi.builder().apiKey(config.getApiKey()).baseUrl(baseUrl).build()
+                : DashScopeApi.builder().apiKey(config.getApiKey()).build();
         log.debug("DashScopeApi built");
 
         DashScopeChatOptions userOptions = DashScopeChatOptions.builder()
@@ -93,15 +99,24 @@ public class ChatService {
         log.debug("User-specific DashScopeChatModel created, model={}", config.getModelName());
 
         StringBuilder fullContent = new StringBuilder();
+        StringBuilder fullThinking = new StringBuilder();
 
         try {
             log.debug("Starting stream...");
             userModel.stream(new Prompt(messages)).subscribe(
                     chunk -> {
                         ChatResponse response = (ChatResponse) chunk;
+                        var metadata = response.getResult().getOutput().getMetadata();
+                        if (metadata != null) {
+                            Object reasoningObj = metadata.get("reasoningContent");
+                            if (reasoningObj instanceof String reasoning && !reasoning.isBlank()) {
+                                fullThinking.append(reasoning);
+                                sendEvent(emitter, "thinking", reasoning);
+                                log.debug("SSE thinking event sent, thinking accumulated={}", fullThinking.length());
+                            }
+                        }
                         String text = response.getResult().getOutput().getText();
-                        log.debug("Stream chunk received, text length={}", text != null ? text.length() : 0);
-                        if (text != null) {
+                        if (text != null && !text.isBlank()) {
                             fullContent.append(text);
                             sendEvent(emitter, "message", text);
                             log.debug("SSE message event sent, accumulated={}", fullContent.length());
@@ -113,11 +128,14 @@ public class ChatService {
                         emitter.complete();
                     },
                     () -> {
-                        log.debug("Stream completed, saving assistant message, total={}", fullContent.length());
+                        log.debug("Stream completed, saving assistant message");
                         Message assistantMsg = new Message();
                         assistantMsg.setConversationId(conversationId);
                         assistantMsg.setRole("assistant");
                         assistantMsg.setContent(fullContent.toString());
+                        if (!fullThinking.isEmpty()) {
+                            assistantMsg.setThinking(fullThinking.toString());
+                        }
                         messageMapper.insert(assistantMsg);
 
                         sendEvent(emitter, "done", "");
