@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useChatStore } from '../store';
 import { Plus, Trash2, Send, LogOut, MessageSquare, Sparkles, Settings, Brain } from 'lucide-react';
+import CodeBlock from '../components/CodeBlock';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -193,13 +194,13 @@ export default function Chat() {
                       </summary>
                       <div className="mt-2 pl-3 border-l-2 border-[#6366F1]/20">
                         <div className="prose prose-sm max-w-none text-[#475569]">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.thinking}</ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
                         </div>
                       </div>
                     </details>
                   )}
                   <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -220,7 +221,7 @@ export default function Chat() {
                   )}
                   {streamContent ? (
                     <div className="px-4 py-3 prose prose-sm max-w-none text-[#1E1B4B]">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamContent}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{streamContent}</ReactMarkdown>
                     </div>
                   ) : streaming && !thinkingContent && (
                     <div className="px-4 py-4 flex items-center gap-1.5 text-[#6366F1]">
