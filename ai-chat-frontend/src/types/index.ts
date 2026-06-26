@@ -1,0 +1,41 @@
+export interface User {
+  id: number;
+  username: string;
+  avatar: string | null;
+}
+
+export interface Conversation {
+  id: number;
+  userId: number;
+  title: string | null;
+  modelProvider: string;
+  modelName: string;
+  systemPrompt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Message {
+  id: number;
+  conversationId: number;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  thinking: string | null;
+  createdAt: string;
+}
+
+export interface ModelConfig {
+  id?: number;
+  userId?: number;
+  provider: string;
+  modelName: string;
+  apiKey: string;
+  baseUrl: string | null;
+  isActive: boolean;
+}
+
+export interface LoginResponse {
+  token: string;
+  username: string;
+  avatar: string | null;
+}

@@ -1,0 +1,51 @@
+import { create } from 'zustand';
+import type { Conversation, Message } from '../types';
+import { conversationApi, messageApi } from '../api/chat';
+
+interface ChatStore {
+  conversations: Conversation[];
+  currentConvId: number | null;
+  messages: Message[];
+  loading: boolean;
+
+  loadConversations: () => Promise<void>;
+  selectConversation: (id: number) => Promise<void>;
+  createConversation: (title?: string) => Promise<number>;
+  deleteConversation: (id: number) => Promise<void>;
+  setCurrentConvId: (id: number | null) => void;
+}
+
+export const useChatStore = create<ChatStore>((set, get) => ({
+  conversations: [],
+  currentConvId: null,
+  messages: [],
+  loading: false,
+
+  loadConversations: async () => {
+    const list = await conversationApi.list();
+    set({ conversations: list });
+  },
+
+  selectConversation: async (id: number) => {
+    set({ currentConvId: id, loading: true });
+    const messages = await messageApi.list(id);
+    set({ messages, loading: false });
+  },
+
+  createConversation: async (title?: string) => {
+    const id = await conversationApi.create({ title: title || 'New Chat' });
+    await get().loadConversations();
+    return id;
+  },
+
+  deleteConversation: async (id: number) => {
+    await conversationApi.delete(id);
+    const { currentConvId } = get();
+    if (currentConvId === id) {
+      set({ currentConvId: null, messages: [] });
+    }
+    await get().loadConversations();
+  },
+
+  setCurrentConvId: (id) => set({ currentConvId: id }),
+}));

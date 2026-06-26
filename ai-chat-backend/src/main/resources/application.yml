@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_chat?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+jwt:
+  secret: ai-chat-secret-key-2026-change-in-production
+  expiration: 86400000
