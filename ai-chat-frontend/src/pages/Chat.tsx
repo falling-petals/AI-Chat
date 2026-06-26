@@ -62,12 +62,12 @@ export default function Chat() {
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            eventType = line.slice(7).trim();
+          if (line.startsWith('event:')) {
+            eventType = line.slice(6).trim();
             continue;
           }
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
+          if (line.startsWith('data:')) {
+            const data = line.slice(5);
             if (eventType === 'message') {
               setStreamContent(prev => prev + data);
             } else if (eventType === 'done') {
