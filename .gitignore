@@ -9,3 +9,4 @@ dist/
 application-local.yaml
 application-local.yml
 .idea/
+*.tsbuildinfo
