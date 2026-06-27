@@ -8,6 +8,8 @@ import com.aichat.service.ChatService;
 import com.aichat.service.ConversationService;
 import com.aichat.service.MessageService;
 import com.aichat.service.ModelConfigService;
+import com.aichat.service.TavilyService;
+import com.aichat.dto.SearchResult;
 import com.aichat.service.provider.ChatModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,24 +42,27 @@ public class ChatServiceImpl implements ChatService {
     private final MessageService messageService;
     private final MessageMapper messageMapper;
     private final FileService fileService;
+    private final TavilyService tavilyService;
     private final ObjectMapper objectMapper;
 
     public ChatServiceImpl(Map<String, ChatModelProvider> providers,
-                           ModelConfigService modelConfigService,
-                           ConversationService conversationService,
-                           MessageService messageService,
-                           MessageMapper messageMapper,
-                           FileService fileService) {
+                            ModelConfigService modelConfigService,
+                            ConversationService conversationService,
+                            MessageService messageService,
+                            MessageMapper messageMapper,
+                            FileService fileService,
+                            TavilyService tavilyService) {
         this.providers = providers;
         this.modelConfigService = modelConfigService;
         this.conversationService = conversationService;
         this.messageService = messageService;
         this.messageMapper = messageMapper;
         this.fileService = fileService;
+        this.tavilyService = tavilyService;
         this.objectMapper = new ObjectMapper();
     }
 
-    public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds) {
+    public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds, Boolean searchEnabled) {
         SseEmitter emitter = createEmitter(userId);
 
         Conversation conv = conversationService.getById(conversationId, userId);
@@ -77,7 +82,7 @@ public class ChatServiceImpl implements ChatService {
         }
         messageMapper.insert(userMsg);
 
-        streamAiResponse(emitter, userId, conv, content, fileIds);
+        streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled);
         return emitter;
     }
 
@@ -114,7 +119,7 @@ public class ChatServiceImpl implements ChatService {
             } catch (Exception ignored) {}
         }
 
-        streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds);
+        streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, false);
         return emitter;
     }
 
@@ -130,7 +135,7 @@ public class ChatServiceImpl implements ChatService {
         return emitter;
     }
 
-    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds) {
+    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds, boolean searchEnabled) {
         ModelConfig config = modelConfigService.getActive(userId);
         if (config == null) {
             sendEvent(emitter, "error", "请先在设置页面配置并激活模型");
@@ -150,6 +155,23 @@ public class ChatServiceImpl implements ChatService {
         if (conv.getSystemPrompt() != null && !conv.getSystemPrompt().isBlank()) {
             messages.add(new SystemMessage(conv.getSystemPrompt()));
         }
+
+        final List<SearchResult> searchResults;
+        if (searchEnabled) {
+            searchResults = tavilyService.search(userContent);
+            if (!searchResults.isEmpty()) {
+                StringBuilder sb = new StringBuilder("以下是来自互联网搜索的相关信息，请参考这些信息来回答用户问题：\n\n");
+                for (int i = 0; i < searchResults.size(); i++) {
+                    SearchResult r = searchResults.get(i);
+                    sb.append("[").append(i + 1).append("] ").append(r.getTitle()).append("\n");
+                    sb.append(r.getContent()).append("\n\n");
+                }
+                messages.add(new SystemMessage(sb.toString()));
+            }
+        } else {
+            searchResults = List.of();
+        }
+
         messages.add(buildUserMessage(userContent, fileIds));
 
         StringBuilder fullContent = new StringBuilder();
@@ -193,7 +215,16 @@ public class ChatServiceImpl implements ChatService {
                         }
                         messageMapper.insert(assistantMsg);
 
-                        sendEvent(emitter, "done", "");
+                        if (searchEnabled && !searchResults.isEmpty()) {
+                            try {
+                                String sourcesJson = objectMapper.writeValueAsString(searchResults);
+                                sendEvent(emitter, "sources", sourcesJson);
+                            } catch (JsonProcessingException e) {
+                                log.warn("序列化搜索结果失败", e);
+                            }
+                        }
+
+                        sendEvent(emitter, "done", "{\"messageId\":" + assistantMsg.getId() + "}");
                         emitter.complete();
 
                         if (conv.getTitle() == null || conv.getTitle().isBlank()) {

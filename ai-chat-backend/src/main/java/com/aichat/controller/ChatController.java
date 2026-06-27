@@ -32,7 +32,7 @@ public class ChatController {
     @PostMapping("/stream")
     public SseEmitter stream(HttpServletRequest request, @RequestBody ChatRequest chatRequest) {
         Long userId = (Long) request.getAttribute("userId");
-        return chatService.stream(userId, chatRequest.getConversationId(), chatRequest.getContent(), chatRequest.getFileIds());
+        return chatService.stream(userId, chatRequest.getConversationId(), chatRequest.getContent(), chatRequest.getFileIds(), chatRequest.getSearchEnabled());
     }
 
     @GetMapping("/messages/{conversationId}")
