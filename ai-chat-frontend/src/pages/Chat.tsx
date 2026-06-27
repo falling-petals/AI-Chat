@@ -27,6 +27,7 @@ export default function Chat() {
   const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
   const [searchEnabled, setSearchEnabled] = useState(false);
   const pendingSourcesRef = useRef<SearchResult[] | null>(null);
+  const abortRef = useRef<(() => void) | null>(null);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
@@ -46,6 +47,12 @@ export default function Chat() {
       setStreamContent('');
       setThinkingContent('');
     }
+  }, []);
+
+  const handleStop = useCallback(() => {
+    abortRef.current?.();
+    abortRef.current = null;
+    setStreaming(false);
   }, []);
 
   const handleUpload = useCallback(async (file: File) => {
@@ -79,7 +86,7 @@ export default function Chat() {
         const nextAiMsg = allMessages.slice(editIdx + 1).find(m => m.role === 'assistant');
 
         if (nextAiMsg) {
-          await regenerateStream(
+          const { promise, abort } = regenerateStream(
             nextAiMsg.id,
             {
               onMessage: (t) => setStreamContent((prev) => prev + t),
@@ -99,6 +106,8 @@ export default function Chat() {
               onFinally: () => setStreaming(false),
             },
           );
+          abortRef.current = abort;
+          await promise;
         } else {
           setStreaming(false);
         }
@@ -123,7 +132,7 @@ export default function Chat() {
         files: uploadedFiles,
       });
 
-      await chatStream(
+      const { promise, abort } = chatStream(
         convId, text,
         {
           onMessage: (t) => setStreamContent((prev) => prev + t),
@@ -150,6 +159,8 @@ export default function Chat() {
         fileIds,
         searchEnabled,
       );
+      abortRef.current = abort;
+      await promise;
     });
   }, [input, streaming, currentConvId, editingMessage, uploadedFiles, createConversation, selectConversation,
       setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream, searchEnabled]);
@@ -170,7 +181,7 @@ export default function Chat() {
 
   const handleRegenerate = useCallback(async (messageId: number) => {
     await startStream(async () => {
-      await regenerateStream(
+      const { promise, abort } = regenerateStream(
         messageId,
         {
           onMessage: (t) => setStreamContent((prev) => prev + t),
@@ -190,6 +201,8 @@ export default function Chat() {
           onFinally: () => setStreaming(false),
         },
       );
+      abortRef.current = abort;
+      await promise;
     });
   }, [currentConvId, selectConversation, startStream]);
 
@@ -262,6 +275,8 @@ export default function Chat() {
           onRemoveFile={handleRemoveFile}
           searchEnabled={searchEnabled}
           onToggleSearch={() => setSearchEnabled((prev) => !prev)}
+          streaming={streaming}
+          onStop={handleStop}
         />
       </div>
     </div>

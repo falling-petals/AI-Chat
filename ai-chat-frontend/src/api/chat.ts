@@ -91,32 +91,35 @@ async function readSSEStream(
   endpoint: string,
   body: object,
   options: SSEOptions,
+  signal?: AbortSignal,
 ): Promise<void> {
   const { onMessage, onThinking, onSources, onDone, onError, onFinally } = options;
   const token = localStorage.getItem('token');
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    throw new Error(`请求失败（HTTP ${res.status}）`);
-  }
-
-  const reader = res.body?.getReader();
-  if (!reader) {
-    throw new Error('未收到流式响应');
-  }
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let eventType = '';
 
   try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`请求失败（HTTP ${res.status}）`);
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+      throw new Error('未收到流式响应');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let eventType = '';
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -158,14 +161,33 @@ async function readSSEStream(
   }
 }
 
+function createSSEStream(
+  endpoint: string,
+  body: object,
+  options: SSEOptions,
+): { promise: Promise<void>; abort: () => void } {
+  const controller = new AbortController();
+  const promise = readSSEStream(endpoint, body, options, controller.signal)
+    .catch((err) => {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    });
+  return {
+    promise,
+    abort: () => controller.abort(),
+  };
+}
+
 export function chatStream(
   conversationId: number,
   content: string,
   options: SSEOptions,
   fileIds?: number[],
   searchEnabled?: boolean,
-): Promise<void> {
-  return readSSEStream(
+): { promise: Promise<void>; abort: () => void } {
+  return createSSEStream(
     '/api/chat/stream',
     { conversationId, content, fileIds, searchEnabled },
     options,
@@ -175,8 +197,8 @@ export function chatStream(
 export function regenerateStream(
   messageId: number,
   options: SSEOptions,
-): Promise<void> {
-  return readSSEStream(
+): { promise: Promise<void>; abort: () => void } {
+  return createSSEStream(
     `/api/chat/messages/${messageId}/regenerate`,
     {},
     options,

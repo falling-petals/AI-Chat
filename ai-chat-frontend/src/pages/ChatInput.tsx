@@ -1,4 +1,4 @@
-import { Send, X, Paperclip, Search } from 'lucide-react';
+import { Send, X, Paperclip, Search, Square } from 'lucide-react';
 import type { FileInfo } from '../types';
 
 interface ChatInputProps {
@@ -14,9 +14,11 @@ interface ChatInputProps {
   onRemoveFile: (id: number) => void;
   searchEnabled: boolean;
   onToggleSearch: () => void;
+  streaming: boolean;
+  onStop: () => void;
 }
 
-export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile, searchEnabled, onToggleSearch }: ChatInputProps) {
+export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile, searchEnabled, onToggleSearch, streaming, onStop }: ChatInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -91,13 +93,23 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             disabled={disabled}
             rows={Math.min(value.split('\n').length, 8)}
           />
-          <button
-            onClick={onSend}
-            disabled={disabled || !value.trim()}
-            className="p-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          {streaming ? (
+            <button
+              onClick={onStop}
+              className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all cursor-pointer"
+              title="Stop generating"
+            >
+              <Square className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              onClick={onSend}
+              disabled={disabled || !value.trim()}
+              className="p-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
