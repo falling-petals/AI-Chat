@@ -14,7 +14,7 @@ public class OpenAiChatModelProvider implements ChatModelProvider {
 
     @Override
     public Flux<ChatResponse> stream(Prompt prompt, ModelConfig config) {
-        String baseUrl = config.getBaseUrl();
+        String baseUrl = normalizeBaseUrl(config.getBaseUrl());
         OpenAiApi api = (baseUrl != null && !baseUrl.isBlank())
                 ? OpenAiApi.builder().apiKey(config.getApiKey()).baseUrl(baseUrl).build()
                 : OpenAiApi.builder().apiKey(config.getApiKey()).build();
@@ -29,5 +29,10 @@ public class OpenAiChatModelProvider implements ChatModelProvider {
                 .build();
 
         return model.stream(prompt);
+    }
+
+    private static String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) return baseUrl;
+        return baseUrl.replaceAll("/v1/?$", "");
     }
 }

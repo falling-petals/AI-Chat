@@ -137,7 +137,11 @@ public class ChatServiceImpl implements ChatService {
             Disposable disposable = provider.stream(new Prompt(messages), config).subscribe(
                     chunk -> {
                         ChatResponse response = (ChatResponse) chunk;
-                        var metadata = response.getResult().getOutput().getMetadata();
+                        var result = response.getResult();
+                        var output = result != null ? result.getOutput() : null;
+                        if (output == null) return;
+
+                        var metadata = output.getMetadata();
                         if (metadata != null) {
                             Object reasoningObj = metadata.get("reasoningContent");
                             if (reasoningObj instanceof String reasoning && !reasoning.isBlank()) {
@@ -145,7 +149,7 @@ public class ChatServiceImpl implements ChatService {
                                 sendEvent(emitter, "thinking", reasoning);
                             }
                         }
-                        String text = response.getResult().getOutput().getText();
+                        String text = output.getText();
                         if (text != null && !text.isBlank()) {
                             fullContent.append(text);
                             sendEvent(emitter, "message", text);

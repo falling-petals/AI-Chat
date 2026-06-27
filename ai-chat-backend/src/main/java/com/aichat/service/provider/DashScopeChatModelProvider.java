@@ -20,7 +20,7 @@ public class DashScopeChatModelProvider implements ChatModelProvider {
 
     @Override
     public Flux<ChatResponse> stream(Prompt prompt, ModelConfig config) {
-        String baseUrl = config.getBaseUrl();
+        String baseUrl = normalizeBaseUrl(config.getBaseUrl());
         DashScopeApi api = (baseUrl != null && !baseUrl.isBlank())
                 ? DashScopeApi.builder().apiKey(config.getApiKey()).baseUrl(baseUrl).build()
                 : DashScopeApi.builder().apiKey(config.getApiKey()).build();
@@ -35,5 +35,10 @@ public class DashScopeChatModelProvider implements ChatModelProvider {
                 .build();
 
         return model.stream(prompt);
+    }
+
+    private static String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) return baseUrl;
+        return baseUrl.replaceAll("/v1/?$", "");
     }
 }
