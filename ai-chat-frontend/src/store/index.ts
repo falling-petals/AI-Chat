@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Conversation, MessageVO } from '../types';
+import type { Conversation, MessageVO, SearchResult } from '../types';
 import { conversationApi, messageApi } from '../api/chat';
 
 interface ChatStore {
@@ -9,6 +9,7 @@ interface ChatStore {
   messages: MessageVO[];
   loading: boolean;
   editingMessage: MessageVO | null;
+  messageSearchResults: Record<number, SearchResult[]>;
 
   setToken: (token: string | null) => void;
   loadConversations: () => Promise<void>;
@@ -22,6 +23,7 @@ interface ChatStore {
   updateMessage: (id: number, content: string) => Promise<void>;
   deleteMessage: (id: number) => Promise<void>;
   setEditingMessage: (msg: MessageVO | null) => void;
+  setMessageSearchResults: (messageId: number, results: SearchResult[]) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -31,6 +33,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
   loading: false,
   editingMessage: null,
+  messageSearchResults: {},
 
   setToken: (token) => set({ token }),
 
@@ -109,4 +112,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   setEditingMessage: (msg) => set({ editingMessage: msg }),
+
+  setMessageSearchResults: (messageId, results) =>
+    set((state) => ({
+      messageSearchResults: { ...state.messageSearchResults, [messageId]: results },
+    })),
 }));

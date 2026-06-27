@@ -1,5 +1,14 @@
 import request from './client';
-import type { Conversation, MessageVO, ModelConfig, FileInfo } from '../types';
+import type { Conversation, MessageVO, ModelConfig, FileInfo, SearchResult } from '../types';
+
+export interface SSEOptions {
+  onMessage: (text: string) => void;
+  onThinking: (text: string) => void;
+  onSources?: (sources: SearchResult[]) => void;
+  onDone: (messageId?: number) => void;
+  onError: (msg: string) => void;
+  onFinally?: () => void;
+}
 
 export const conversationApi = {
   list: () => request<Conversation[]>('/conversations'),
@@ -81,12 +90,9 @@ export const modelConfigApi = {
 async function readSSEStream(
   endpoint: string,
   body: object,
-  onMessage: (text: string) => void,
-  onThinking: (text: string) => void,
-  onDone: () => void,
-  onError: (msg: string) => void,
-  onFinally?: () => void,
-) {
+  options: SSEOptions,
+): Promise<void> {
+  const { onMessage, onThinking, onSources, onDone, onError, onFinally } = options;
   const token = localStorage.getItem('token');
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -130,8 +136,17 @@ async function readSSEStream(
             onMessage(data);
           } else if (eventType === 'thinking') {
             onThinking(data);
+          } else if (eventType === 'sources') {
+            try {
+              onSources?.(JSON.parse(data));
+            } catch { /* ignore parse errors */ }
           } else if (eventType === 'done') {
-            onDone();
+            let messageId: number | undefined;
+            try {
+              const parsed = JSON.parse(data);
+              messageId = parsed.messageId;
+            } catch { /* data may be empty string */ }
+            onDone(messageId);
           } else if (eventType === 'error') {
             onError(data.trim() || '操作失败，请重试');
           }
@@ -146,31 +161,23 @@ async function readSSEStream(
 export function chatStream(
   conversationId: number,
   content: string,
-  onMessage: (text: string) => void,
-  onThinking: (text: string) => void,
-  onDone: () => void,
-  onError: (msg: string) => void,
-  onFinally?: () => void,
+  options: SSEOptions,
   fileIds?: number[],
-) {
+): Promise<void> {
   return readSSEStream(
     '/api/chat/stream',
     { conversationId, content, fileIds },
-    onMessage, onThinking, onDone, onError, onFinally,
+    options,
   );
 }
 
 export function regenerateStream(
   messageId: number,
-  onMessage: (text: string) => void,
-  onThinking: (text: string) => void,
-  onDone: () => void,
-  onError: (msg: string) => void,
-  onFinally?: () => void,
-) {
+  options: SSEOptions,
+): Promise<void> {
   return readSSEStream(
     `/api/chat/messages/${messageId}/regenerate`,
     {},
-    onMessage, onThinking, onDone, onError, onFinally,
+    options,
   );
 }

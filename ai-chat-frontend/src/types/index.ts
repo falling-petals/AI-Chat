@@ -50,3 +50,9 @@ export interface LoginResponse {
   username: string;
   avatar: string | null;
 }
+
+export interface SearchResult {
+  title: string;
+  url: string;
+  content: string;
+}
