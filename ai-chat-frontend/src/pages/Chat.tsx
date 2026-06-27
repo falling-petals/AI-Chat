@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
 import { chatStream, regenerateStream, fileApi } from '../api/chat';
-import type { MessageVO, FileInfo } from '../types';
+import type { MessageVO, FileInfo, SearchResult } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import StreamingMessage from './StreamingMessage';
@@ -25,6 +25,8 @@ export default function Chat() {
   const [thinkingContent, setThinkingContent] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
+  const [searchEnabled, setSearchEnabled] = useState(false);
+  const pendingSourcesRef = useRef<SearchResult[] | null>(null);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
@@ -79,21 +81,23 @@ export default function Chat() {
         if (nextAiMsg) {
           await regenerateStream(
             nextAiMsg.id,
-            (t) => setStreamContent((prev) => prev + t),
-            (t) => setThinkingContent((prev) => prev + t),
-            async () => {
-              setStreaming(false);
-              setStreamContent('');
-              setThinkingContent('');
-              if (currentConvId) await selectConversation(currentConvId);
+            {
+              onMessage: (t) => setStreamContent((prev) => prev + t),
+              onThinking: (t) => setThinkingContent((prev) => prev + t),
+              onDone: async () => {
+                setStreaming(false);
+                setStreamContent('');
+                setThinkingContent('');
+                if (currentConvId) await selectConversation(currentConvId);
+              },
+              onError: (msg) => {
+                setErrorMessage(msg);
+                setStreaming(false);
+                setStreamContent('');
+                setThinkingContent('');
+              },
+              onFinally: () => setStreaming(false),
             },
-            (msg) => {
-              setErrorMessage(msg);
-              setStreaming(false);
-              setStreamContent('');
-              setThinkingContent('');
-            },
-            () => setStreaming(false),
           );
         } else {
           setStreaming(false);
@@ -120,28 +124,35 @@ export default function Chat() {
       });
 
       await chatStream(
-        convId,
-        text,
-        (t) => setStreamContent((prev) => prev + t),
-        (t) => setThinkingContent((prev) => prev + t),
-        async () => {
-          setStreaming(false);
-          setStreamContent('');
-          setThinkingContent('');
-          await selectConversation(convId!);
+        convId, text,
+        {
+          onMessage: (t) => setStreamContent((prev) => prev + t),
+          onThinking: (t) => setThinkingContent((prev) => prev + t),
+          onSources: (sources) => { pendingSourcesRef.current = sources; },
+          onDone: async (messageId) => {
+            setStreaming(false);
+            if (messageId && pendingSourcesRef.current) {
+              useChatStore.getState().setMessageSearchResults(messageId, pendingSourcesRef.current);
+            }
+            pendingSourcesRef.current = null;
+            setStreamContent('');
+            setThinkingContent('');
+            await selectConversation(convId!);
+          },
+          onError: (msg) => {
+            setErrorMessage(msg);
+            setStreaming(false);
+            setStreamContent('');
+            setThinkingContent('');
+          },
+          onFinally: () => setStreaming(false),
         },
-        (msg) => {
-          setErrorMessage(msg);
-          setStreaming(false);
-          setStreamContent('');
-          setThinkingContent('');
-        },
-        () => setStreaming(false),
         fileIds,
+        searchEnabled,
       );
     });
   }, [input, streaming, currentConvId, editingMessage, uploadedFiles, createConversation, selectConversation,
-      setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream]);
+      setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream, searchEnabled]);
 
   const handleEdit = useCallback((msg: MessageVO) => {
     setInput(msg.content);
@@ -161,21 +172,23 @@ export default function Chat() {
     await startStream(async () => {
       await regenerateStream(
         messageId,
-        (t) => setStreamContent((prev) => prev + t),
-        (t) => setThinkingContent((prev) => prev + t),
-        async () => {
-          setStreaming(false);
-          setStreamContent('');
-          setThinkingContent('');
-          if (currentConvId) await selectConversation(currentConvId);
+        {
+          onMessage: (t) => setStreamContent((prev) => prev + t),
+          onThinking: (t) => setThinkingContent((prev) => prev + t),
+          onDone: async () => {
+            setStreaming(false);
+            setStreamContent('');
+            setThinkingContent('');
+            if (currentConvId) await selectConversation(currentConvId);
+          },
+          onError: (msg) => {
+            setErrorMessage(msg);
+            setStreaming(false);
+            setStreamContent('');
+            setThinkingContent('');
+          },
+          onFinally: () => setStreaming(false),
         },
-        (msg) => {
-          setErrorMessage(msg);
-          setStreaming(false);
-          setStreamContent('');
-          setThinkingContent('');
-        },
-        () => setStreaming(false),
       );
     });
   }, [currentConvId, selectConversation, startStream]);
@@ -247,6 +260,8 @@ export default function Chat() {
           uploadedFiles={uploadedFiles}
           onUpload={handleUpload}
           onRemoveFile={handleRemoveFile}
+          searchEnabled={searchEnabled}
+          onToggleSearch={() => setSearchEnabled((prev) => !prev)}
         />
       </div>
     </div>

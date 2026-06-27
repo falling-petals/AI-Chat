@@ -163,10 +163,11 @@ export function chatStream(
   content: string,
   options: SSEOptions,
   fileIds?: number[],
+  searchEnabled?: boolean,
 ): Promise<void> {
   return readSSEStream(
     '/api/chat/stream',
-    { conversationId, content, fileIds },
+    { conversationId, content, fileIds, searchEnabled },
     options,
   );
 }

@@ -1,4 +1,4 @@
-import { Send, X, Paperclip } from 'lucide-react';
+import { Send, X, Paperclip, Search } from 'lucide-react';
 import type { FileInfo } from '../types';
 
 interface ChatInputProps {
@@ -12,9 +12,11 @@ interface ChatInputProps {
   uploadedFiles: FileInfo[];
   onUpload: (file: File) => Promise<void>;
   onRemoveFile: (id: number) => void;
+  searchEnabled: boolean;
+  onToggleSearch: () => void;
 }
 
-export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile }: ChatInputProps) {
+export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile, searchEnabled, onToggleSearch }: ChatInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -68,6 +70,18 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             <Paperclip className="w-5 h-5" />
           </button>
           <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" onChange={handleFileChange} disabled={disabled} />
+          <button
+            onClick={onToggleSearch}
+            disabled={disabled}
+            className={`p-3 rounded-xl transition-all cursor-pointer ${
+              searchEnabled
+                ? 'bg-[#6366F1] text-white shadow-sm'
+                : 'text-[#6366F1]/60 hover:text-[#6366F1] hover:bg-[#6366F1]/5'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Web search"
+          >
+            <Search className="w-5 h-5" />
+          </button>
           <textarea
             className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all resize-none"
             placeholder={disabled ? 'AI is thinking...' : 'Type a message...'}

@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Brain, Pencil, Copy, Trash2, RefreshCw, File } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import type { MessageVO } from '../types';
+import { useChatStore } from '../store';
 
 interface MessageListProps {
   messages: MessageVO[];
@@ -61,6 +62,7 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
 }
 
 export default function MessageList({ messages, onEdit, onDelete, onRegenerate }: MessageListProps) {
+  const messageSearchResults = useChatStore((s) => s.messageSearchResults);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,6 +138,23 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                 <div className="prose prose-sm max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                 </div>
+                {msg.role === 'assistant' && (() => {
+                  const results = messageSearchResults[msg.id];
+                  if (!results || results.length === 0) return null;
+                  return (
+                    <div className="mt-3 space-y-2 border-t border-gray-100 pt-2">
+                      <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Sources</div>
+                      {results.map((r, i) => (
+                        <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
+                           className="block p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100">
+                          <div className="text-xs font-medium text-[#6366F1] truncate">{r.title}</div>
+                          <div className="text-[10px] text-gray-400 mt-0.5">{new URL(r.url).hostname}</div>
+                          <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{r.content}</div>
+                        </a>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {msg.role === 'user' && (
                     <button onClick={() => onEdit(msg)} className={userBtnClass} title="编辑">
