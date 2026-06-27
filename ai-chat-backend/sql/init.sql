@@ -18,9 +18,12 @@ CREATE TABLE conversation (
     model_provider VARCHAR(50) DEFAULT 'dashscope',
     model_name VARCHAR(100) DEFAULT 'qwen-plus',
     system_prompt TEXT DEFAULT NULL,
+    pinned TINYINT(1) NOT NULL DEFAULT 0,
+    archived TINYINT(1) NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    INDEX idx_user_archived (user_id, archived)
 );
 
 CREATE TABLE message (
@@ -46,3 +49,11 @@ CREATE TABLE model_config (
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
     UNIQUE KEY uk_user_model (user_id, provider, model_name)
 );
+
+-- ============================================================
+-- Migration (2026-06-27): 对话置顶/归档
+-- 已有数据库执行：
+--   ALTER TABLE conversation ADD COLUMN pinned TINYINT(1) NOT NULL DEFAULT 0;
+--   ALTER TABLE conversation ADD COLUMN archived TINYINT(1) NOT NULL DEFAULT 0;
+--   CREATE INDEX idx_user_archived ON conversation(user_id, archived);
+-- ============================================================

@@ -14,6 +14,12 @@ export const conversationApi = {
 
   delete: (id: number) =>
     request<void>(`/conversations/${id}`, { method: 'DELETE' }),
+
+  togglePin: (id: number) =>
+    request<void>(`/conversations/${id}/pin`, { method: 'PUT' }),
+
+  toggleArchive: (id: number) =>
+    request<void>(`/conversations/${id}/archive`, { method: 'PUT' }),
 };
 
 export const messageApi = {

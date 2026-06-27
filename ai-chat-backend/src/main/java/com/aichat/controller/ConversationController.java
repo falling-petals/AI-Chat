@@ -61,4 +61,24 @@ public class ConversationController {
         conversationService.delete(userId, id);
         return Result.success(null);
     }
+
+    @GetMapping("/search")
+    public Result<List<Conversation>> search(HttpServletRequest request, @RequestParam String q) {
+        Long userId = (Long) request.getAttribute("userId");
+        return Result.success(conversationService.search(userId, q));
+    }
+
+    @PutMapping("/{id}/pin")
+    public Result<?> togglePin(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        conversationService.togglePin(userId, id);
+        return Result.success(null);
+    }
+
+    @PutMapping("/{id}/archive")
+    public Result<?> toggleArchive(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        conversationService.toggleArchive(userId, id);
+        return Result.success(null);
+    }
 }

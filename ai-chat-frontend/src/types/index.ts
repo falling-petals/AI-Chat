@@ -11,6 +11,8 @@ export interface Conversation {
   modelProvider: string;
   modelName: string;
   systemPrompt: string | null;
+  pinned: boolean;
+  archived: boolean;
   createdAt: string;
   updatedAt: string;
 }

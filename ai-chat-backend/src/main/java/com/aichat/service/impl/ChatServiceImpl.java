@@ -172,6 +172,10 @@ public class ChatServiceImpl implements ChatService {
 
                         sendEvent(emitter, "done", "");
                         emitter.complete();
+
+                        if (conv.getTitle() == null || conv.getTitle().isBlank()) {
+                            autoRenameConversation(userId, conv.getId(), userContent);
+                        }
                     }
             );
             disposableRef.set(disposable);
@@ -196,5 +200,23 @@ public class ChatServiceImpl implements ChatService {
         try {
             emitter.send(SseEmitter.event().name(name).data(data));
         } catch (IOException ignored) {}
+    }
+
+    void autoRenameConversation(Long userId, Long convId, String userContent) {
+        String title = userContent.trim();
+        if (title.length() > 30) {
+            title = title.substring(0, 30) + "...";
+        }
+        if (title.isBlank()) return;
+
+        try {
+            Conversation conv = conversationService.getById(convId, userId);
+            if (conv != null && (conv.getTitle() == null || conv.getTitle().isBlank())) {
+                conv.setTitle(title);
+                conversationService.update(userId, conv);
+            }
+        } catch (Exception e) {
+            log.warn("Auto-rename failed: {}", e.getMessage());
+        }
     }
 }

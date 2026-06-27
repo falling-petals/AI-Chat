@@ -3,6 +3,7 @@ package com.aichat.service.impl;
 import com.aichat.entity.Conversation;
 import com.aichat.mapper.ConversationMapper;
 import com.aichat.service.ConversationService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +20,15 @@ public class ConversationServiceImpl implements ConversationService {
 
     public List<Conversation> listByUser(Long userId) {
         return conversationMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Conversation>()
+                new LambdaQueryWrapper<Conversation>()
                         .eq(Conversation::getUserId, userId)
+                        .orderByDesc(Conversation::getPinned)
                         .orderByDesc(Conversation::getUpdatedAt));
     }
 
     public Conversation getById(Long id, Long userId) {
         return conversationMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Conversation>()
+                new LambdaQueryWrapper<Conversation>()
                         .eq(Conversation::getId, id)
                         .eq(Conversation::getUserId, userId));
     }
@@ -49,8 +51,38 @@ public class ConversationServiceImpl implements ConversationService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long userId, Long id) {
         conversationMapper.delete(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Conversation>()
+                new LambdaQueryWrapper<Conversation>()
                         .eq(Conversation::getId, id)
                         .eq(Conversation::getUserId, userId));
+    }
+
+    public List<Conversation> search(Long userId, String keyword) {
+        return conversationMapper.selectList(
+                new LambdaQueryWrapper<Conversation>()
+                        .eq(Conversation::getUserId, userId)
+                        .like(keyword != null && !keyword.isBlank(),
+                                Conversation::getTitle, keyword)
+                        .orderByDesc(Conversation::getPinned)
+                        .orderByDesc(Conversation::getUpdatedAt));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void togglePin(Long userId, Long id) {
+        Conversation existing = getById(id, userId);
+        if (existing == null) {
+            throw new IllegalArgumentException("会话不存在或无权访问");
+        }
+        existing.setPinned(!Boolean.TRUE.equals(existing.getPinned()));
+        conversationMapper.updateById(existing);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void toggleArchive(Long userId, Long id) {
+        Conversation existing = getById(id, userId);
+        if (existing == null) {
+            throw new IllegalArgumentException("会话不存在或无权访问");
+        }
+        existing.setArchived(!Boolean.TRUE.equals(existing.getArchived()));
+        conversationMapper.updateById(existing);
     }
 }

@@ -11,6 +11,8 @@ public class Conversation {
     private String modelProvider;
     private String modelName;
     private String systemPrompt;
+    private Boolean pinned;
+    private Boolean archived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -10,4 +10,7 @@ public interface ConversationService {
     Long create(Long userId, Conversation conversation);
     void update(Long userId, Conversation conversation);
     void delete(Long userId, Long id);
+    List<Conversation> search(Long userId, String keyword);
+    void togglePin(Long userId, Long id);
+    void toggleArchive(Long userId, Long id);
 }

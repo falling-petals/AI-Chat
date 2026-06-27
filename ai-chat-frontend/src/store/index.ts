@@ -15,6 +15,8 @@ interface ChatStore {
   selectConversation: (id: number) => Promise<void>;
   createConversation: (title?: string) => Promise<number>;
   deleteConversation: (id: number) => Promise<void>;
+  togglePin: (id: number) => Promise<void>;
+  toggleArchive: (id: number) => Promise<void>;
   setCurrentConvId: (id: number | null) => void;
   appendMessage: (msg: Message) => void;
   updateMessage: (id: number, content: string) => Promise<void>;
@@ -44,7 +46,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   createConversation: async (title?: string) => {
-    const id = await conversationApi.create({ title: title || 'New Chat' });
+    const id = await conversationApi.create({ title: title || '' });
     await get().loadConversations();
     return id;
   },
@@ -56,6 +58,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({ currentConvId: null, messages: [] });
     }
     await get().loadConversations();
+  },
+
+  togglePin: async (id: number) => {
+    await conversationApi.togglePin(id);
+    set((state) => {
+      const list = state.conversations.map((c) =>
+        c.id === id ? { ...c, pinned: !c.pinned } : c
+      );
+      list.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
+      return { conversations: list };
+    });
+  },
+
+  toggleArchive: async (id: number) => {
+    await conversationApi.toggleArchive(id);
+    const { currentConvId } = get();
+    if (currentConvId === id) {
+      set({ currentConvId: null, messages: [] });
+    }
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === id ? { ...c, archived: !c.archived } : c
+      ),
+    }));
   },
 
   setCurrentConvId: (id) => {

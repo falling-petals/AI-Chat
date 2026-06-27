@@ -14,6 +14,7 @@ export default function Chat() {
   const {
     conversations, currentConvId, messages,
     loadConversations, selectConversation, createConversation, deleteConversation,
+    togglePin, toggleArchive,
     setCurrentConvId, appendMessage, updateMessage, deleteMessage,
     editingMessage, setEditingMessage,
   } = useChatStore();
@@ -90,7 +91,7 @@ export default function Chat() {
     await startStream(async () => {
       let convId = currentConvId;
       if (!convId) {
-        convId = await createConversation(text.slice(0, 50));
+        convId = await createConversation('');
         setCurrentConvId(convId);
       }
 
@@ -185,6 +186,8 @@ export default function Chat() {
         currentConvId={currentConvId}
         onSelect={selectConversation}
         onDelete={deleteConversation}
+        onTogglePin={togglePin}
+        onToggleArchive={toggleArchive}
         onNewChat={handleNewChat}
         onSettings={() => navigate('/settings')}
         onLogout={handleLogout}
