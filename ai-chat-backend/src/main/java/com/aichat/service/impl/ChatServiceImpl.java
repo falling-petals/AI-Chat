@@ -17,6 +17,8 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -28,8 +30,11 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReference;
 import reactor.core.Disposable;
+import org.apache.tika.Tika;
 
 @Service
 public class ChatServiceImpl implements ChatService {
@@ -44,6 +49,9 @@ public class ChatServiceImpl implements ChatService {
     private final FileService fileService;
     private final TavilyService tavilyService;
     private final ObjectMapper objectMapper;
+
+    @Value("${app.file-extract-max-chars:50000}")
+    private int maxExtractChars;
 
     public ChatServiceImpl(Map<String, ChatModelProvider> providers,
                             ModelConfigService modelConfigService,
@@ -173,7 +181,19 @@ public class ChatServiceImpl implements ChatService {
             searchResults = List.of();
         }
 
-        messages.add(buildUserMessage(userContent, fileIds));
+        Set<Long> extractedFileIds = new HashSet<>();
+        if (fileIds != null && !fileIds.isEmpty()) {
+            List<com.aichat.entity.File> fileEntities = fileService.getByIds(fileIds);
+            for (com.aichat.entity.File f : fileEntities) {
+                String extracted = extractTextContent(f);
+                if (extracted != null) {
+                    messages.add(new SystemMessage(
+                            "用户上传了文档「" + f.getOriginalName() + "」，其文本内容如下：\n\n" + extracted));
+                    extractedFileIds.add(f.getId());
+                }
+            }
+        }
+        messages.add(buildUserMessage(userContent, fileIds, extractedFileIds));
 
         StringBuilder fullContent = new StringBuilder();
         StringBuilder fullThinking = new StringBuilder();
@@ -246,7 +266,38 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    private UserMessage buildUserMessage(String content, List<Long> fileIds) {
+    private static final Set<String> EXTRACTABLE_MIME_PREFIXES = Set.of(
+            "text/",
+            "application/pdf",
+            "application/msword",
+            "application/vnd.ms-excel",
+            "application/vnd.ms-powerpoint"
+    );
+
+    private String extractTextContent(com.aichat.entity.File file) {
+        String mime = file.getMimeType();
+        if (mime == null) return null;
+
+        boolean supported = EXTRACTABLE_MIME_PREFIXES.stream().anyMatch(mime::startsWith)
+                || mime.contains("openxmlformats-officedocument");
+        if (!supported) return null;
+
+        try {
+            Tika tika = new Tika();
+            Resource resource = fileService.loadAsResource(file.getId());
+            String content = tika.parseToString(resource.getInputStream());
+            if (content == null || content.isBlank()) return null;
+            if (content.length() > maxExtractChars) {
+                content = content.substring(0, maxExtractChars) + "\n\n（内容已截断）";
+            }
+            return content;
+        } catch (Exception e) {
+            log.warn("文件内容提取失败: {}, mimeType={}", file.getOriginalName(), mime, e);
+            return null;
+        }
+    }
+
+    private UserMessage buildUserMessage(String content, List<Long> fileIds, Set<Long> extractedFileIds) {
         if (fileIds == null || fileIds.isEmpty()) {
             return new UserMessage(content);
         }
@@ -272,7 +323,7 @@ public class ChatServiceImpl implements ChatService {
                     log.warn("读取图片失败: {}", file.getOriginalName());
                     textContent.append("[图片: ").append(file.getOriginalName()).append("]\n");
                 }
-            } else {
+            } else if (!extractedFileIds.contains(file.getId())) {
                 textContent.append("[文件: ").append(file.getOriginalName()).append("]\n");
             }
         }

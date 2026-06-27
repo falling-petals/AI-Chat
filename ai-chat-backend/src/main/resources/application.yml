@@ -4,6 +4,10 @@ server:
 spring:
   profiles:
     active: local
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 60MB
   ai:
     dashscope:
       api-key: placeholder
@@ -25,6 +29,7 @@ jwt:
 
 app:
   upload-dir: ./uploads
+  file-extract-max-chars: 50000
 
 tavily:
   api-key: placeholder
