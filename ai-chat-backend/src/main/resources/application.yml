@@ -25,3 +25,6 @@ jwt:
 
 app:
   upload-dir: ./uploads
+
+tavily:
+  api-key: placeholder
