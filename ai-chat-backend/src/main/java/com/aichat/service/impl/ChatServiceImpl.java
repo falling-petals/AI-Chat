@@ -164,7 +164,8 @@ public class ChatServiceImpl implements ChatService {
                 for (int i = 0; i < searchResults.size(); i++) {
                     SearchResult r = searchResults.get(i);
                     sb.append("[").append(i + 1).append("] ").append(r.getTitle()).append("\n");
-                    sb.append(r.getContent()).append("\n\n");
+                    sb.append("    来源: ").append(r.getUrl()).append("\n");
+                    sb.append("    内容: ").append(r.getContent()).append("\n\n");
                 }
                 messages.add(new SystemMessage(sb.toString()));
             }
