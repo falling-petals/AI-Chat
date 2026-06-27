@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/auth';
+import { useChatStore } from '../store';
 import { MessageSquare } from 'lucide-react';
 
 export default function Login() {
+  const setToken = useChatStore((s) => s.setToken);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,6 +17,7 @@ export default function Login() {
       const res = await login(username, password);
       localStorage.setItem('token', res.token);
       localStorage.setItem('username', res.username);
+      setToken(res.token);
       navigate('/');
     } catch (err: any) {
       setError(err.message);

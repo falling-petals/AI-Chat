@@ -3,9 +3,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
+import { useChatStore } from './store';
 
 function App() {
-  const token = localStorage.getItem('token');
+  const token = useChatStore((s) => s.token);
 
   return (
     <BrowserRouter>

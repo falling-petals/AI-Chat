@@ -3,11 +3,13 @@ import type { Conversation, Message } from '../types';
 import { conversationApi, messageApi } from '../api/chat';
 
 interface ChatStore {
+  token: string | null;
   conversations: Conversation[];
   currentConvId: number | null;
   messages: Message[];
   loading: boolean;
 
+  setToken: (token: string | null) => void;
   loadConversations: () => Promise<void>;
   selectConversation: (id: number) => Promise<void>;
   createConversation: (title?: string) => Promise<number>;
@@ -17,10 +19,13 @@ interface ChatStore {
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
+  token: localStorage.getItem('token'),
   conversations: [],
   currentConvId: null,
   messages: [],
   loading: false,
+
+  setToken: (token) => set({ token }),
 
   loadConversations: async () => {
     const list = await conversationApi.list();

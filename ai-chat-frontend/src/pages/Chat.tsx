@@ -87,9 +87,12 @@ export default function Chat() {
     }
   };
 
+  const setToken = useChatStore((s) => s.setToken);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
+    setToken(null);
     navigate('/login');
   };
 
