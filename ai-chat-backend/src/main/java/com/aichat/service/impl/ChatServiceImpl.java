@@ -41,6 +41,8 @@ public class ChatServiceImpl implements ChatService {
 
     private static final Logger log = LoggerFactory.getLogger(ChatServiceImpl.class);
 
+    private static final Tika TIKA = new Tika();
+
     private final Map<String, ChatModelProvider> providers;
     private final ModelConfigService modelConfigService;
     private final ConversationService conversationService;
@@ -283,9 +285,8 @@ public class ChatServiceImpl implements ChatService {
         if (!supported) return null;
 
         try {
-            Tika tika = new Tika();
             Resource resource = fileService.loadAsResource(file.getId());
-            String content = tika.parseToString(resource.getInputStream());
+            String content = TIKA.parseToString(resource.getInputStream());
             if (content == null || content.isBlank()) return null;
             if (content.length() > maxExtractChars) {
                 content = content.substring(0, maxExtractChars) + "\n\n（内容已截断）";

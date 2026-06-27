@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Brain, Pencil, Copy, Trash2, RefreshCw, File, FileText, FileSpreadsheet, FileImage } from 'lucide-react';
+import { Brain, Pencil, Copy, Trash2, RefreshCw, File, FileText, FileSpreadsheet } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import type { MessageVO } from '../types';
 import { useChatStore } from '../store';
