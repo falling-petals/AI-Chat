@@ -96,6 +96,7 @@ public class ChatServiceImpl implements ChatService {
                 userMsg.setFileIds(objectMapper.writeValueAsString(fileIds));
             } catch (JsonProcessingException ignored) {}
         }
+        userMsg.setCreatedAt(LocalDateTime.now());
         messageMapper.insert(userMsg);
 
         streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt());
@@ -186,7 +187,7 @@ public class ChatServiceImpl implements ChatService {
                                     new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
                         } catch (Exception ignored) {}
                     }
-                    messages.add(buildUserMessage(hMsg.getContent(), hFileIds, Set.of()));
+                    messages.add(buildUserMessage(hMsg.getContent() != null ? hMsg.getContent() : "", hFileIds, Set.of()));
                 } else if ("assistant".equals(hMsg.getRole())) {
                     messages.add(new AssistantMessage(
                             hMsg.getContent() != null ? hMsg.getContent() : ""));
