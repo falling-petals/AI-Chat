@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import reactor.core.Disposable;
 import org.apache.tika.Tika;
@@ -229,8 +230,31 @@ public class ChatServiceImpl implements ChatService {
         StringBuilder fullContent = new StringBuilder();
         StringBuilder fullThinking = new StringBuilder();
 
+        AtomicReference<Disposable> disposableRef = new AtomicReference<>();
+        AtomicBoolean savedToDb = new AtomicBoolean(false);
+
+        emitter.onCompletion(() -> {
+            log.debug("SSE onCompletion for userId={}", userId);
+            if (!savedToDb.getAndSet(true)) {
+                String partialContent = fullContent.toString();
+                if (!partialContent.isBlank()) {
+                    Message assistantMsg = new Message();
+                    assistantMsg.setConversationId(conv.getId());
+                    assistantMsg.setRole("assistant");
+                    assistantMsg.setContent(partialContent);
+                    if (!fullThinking.isEmpty()) {
+                        assistantMsg.setThinking(fullThinking.toString());
+                    }
+                    messageMapper.insert(assistantMsg);
+                    log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
+                }
+            }
+            if (disposableRef.get() != null && !disposableRef.get().isDisposed()) {
+                disposableRef.get().dispose();
+            }
+        });
+
         try {
-            AtomicReference<Disposable> disposableRef = new AtomicReference<>();
             Disposable disposable = provider.stream(new Prompt(messages), config).subscribe(
                     chunk -> {
                         ChatResponse response = (ChatResponse) chunk;
@@ -254,10 +278,12 @@ public class ChatServiceImpl implements ChatService {
                     },
                     error -> {
                         log.error("Stream error: {}", error.getMessage(), error);
+                        savedToDb.set(true);
                         sendEvent(emitter, "error", error.getMessage());
                         emitter.complete();
                     },
                     () -> {
+                        savedToDb.set(true);
                         Message assistantMsg = new Message();
                         assistantMsg.setConversationId(conv.getId());
                         assistantMsg.setRole("assistant");
@@ -285,11 +311,6 @@ public class ChatServiceImpl implements ChatService {
                     }
             );
             disposableRef.set(disposable);
-            emitter.onCompletion(() -> {
-                if (disposableRef.get() != null && !disposableRef.get().isDisposed()) {
-                    disposableRef.get().dispose();
-                }
-            });
         } catch (Exception e) {
             log.error("Stream setup error: {}", e.getMessage(), e);
             sendEvent(emitter, "error", e.getMessage());
