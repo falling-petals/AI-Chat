@@ -19,7 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import com.aichat.service.FileService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,20 +39,25 @@ public class ChatServiceImpl implements ChatService {
     private final ConversationService conversationService;
     private final MessageService messageService;
     private final MessageMapper messageMapper;
+    private final FileService fileService;
+    private final ObjectMapper objectMapper;
 
     public ChatServiceImpl(Map<String, ChatModelProvider> providers,
                            ModelConfigService modelConfigService,
                            ConversationService conversationService,
                            MessageService messageService,
-                           MessageMapper messageMapper) {
+                           MessageMapper messageMapper,
+                           FileService fileService) {
         this.providers = providers;
         this.modelConfigService = modelConfigService;
         this.conversationService = conversationService;
         this.messageService = messageService;
         this.messageMapper = messageMapper;
+        this.fileService = fileService;
+        this.objectMapper = new ObjectMapper();
     }
 
-    public SseEmitter stream(Long userId, Long conversationId, String content) {
+    public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds) {
         SseEmitter emitter = createEmitter(userId);
 
         Conversation conv = conversationService.getById(conversationId, userId);
@@ -61,9 +70,14 @@ public class ChatServiceImpl implements ChatService {
         userMsg.setConversationId(conversationId);
         userMsg.setRole("user");
         userMsg.setContent(content);
+        if (fileIds != null && !fileIds.isEmpty()) {
+            try {
+                userMsg.setFileIds(objectMapper.writeValueAsString(fileIds));
+            } catch (JsonProcessingException ignored) {}
+        }
         messageMapper.insert(userMsg);
 
-        streamAiResponse(emitter, userId, conv, content);
+        streamAiResponse(emitter, userId, conv, content, fileIds);
         return emitter;
     }
 
@@ -91,7 +105,16 @@ public class ChatServiceImpl implements ChatService {
         // Delete all messages after the user message (clear old AI response and anything beyond)
         messageService.deleteAfter(aiMsg.getConversationId(), userMsg.getId());
 
-        streamAiResponse(emitter, userId, conv, userMsg.getContent());
+        // Parse fileIds from the stored user message for regenerate
+        List<Long> fileIds = new ArrayList<>();
+        if (userMsg.getFileIds() != null && !userMsg.getFileIds().isBlank()) {
+            try {
+                fileIds = objectMapper.readValue(userMsg.getFileIds(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
+            } catch (Exception ignored) {}
+        }
+
+        streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds);
         return emitter;
     }
 
@@ -107,7 +130,7 @@ public class ChatServiceImpl implements ChatService {
         return emitter;
     }
 
-    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent) {
+    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds) {
         ModelConfig config = modelConfigService.getActive(userId);
         if (config == null) {
             sendEvent(emitter, "error", "请先在设置页面配置并激活模型");
@@ -127,7 +150,7 @@ public class ChatServiceImpl implements ChatService {
         if (conv.getSystemPrompt() != null && !conv.getSystemPrompt().isBlank()) {
             messages.add(new SystemMessage(conv.getSystemPrompt()));
         }
-        messages.add(new UserMessage(userContent));
+        messages.add(buildUserMessage(userContent, fileIds));
 
         StringBuilder fullContent = new StringBuilder();
         StringBuilder fullThinking = new StringBuilder();
@@ -189,6 +212,46 @@ public class ChatServiceImpl implements ChatService {
             sendEvent(emitter, "error", e.getMessage());
             emitter.complete();
         }
+    }
+
+    private UserMessage buildUserMessage(String content, List<Long> fileIds) {
+        if (fileIds == null || fileIds.isEmpty()) {
+            return new UserMessage(content);
+        }
+
+        List<com.aichat.entity.File> files = fileService.getByIds(fileIds);
+        if (files.isEmpty()) return new UserMessage(content);
+
+        StringBuilder textContent = new StringBuilder(content);
+        if (!content.isBlank()) textContent.append("\n\n");
+        java.util.List<org.springframework.ai.content.Media> mediaList = new java.util.ArrayList<>();
+
+        for (com.aichat.entity.File file : files) {
+            String mime = file.getMimeType();
+            if (mime != null && mime.startsWith("image/")) {
+                try {
+                    java.nio.file.Path path = java.nio.file.Paths.get("./uploads", file.getStoredName());
+                    byte[] imageBytes = java.nio.file.Files.readAllBytes(path);
+                    String base64 = Base64.getEncoder().encodeToString(imageBytes);
+                    mediaList.add(new org.springframework.ai.content.Media(
+                            org.springframework.util.MimeTypeUtils.parseMimeType(mime),
+                            java.net.URI.create("data:" + mime + ";base64," + base64)));
+                } catch (IOException e) {
+                    log.warn("读取图片失败: {}", file.getOriginalName());
+                    textContent.append("[图片: ").append(file.getOriginalName()).append("]\n");
+                }
+            } else {
+                textContent.append("[文件: ").append(file.getOriginalName()).append("]\n");
+            }
+        }
+
+        if (mediaList.isEmpty()) {
+            return new UserMessage(textContent.toString());
+        }
+        return UserMessage.builder()
+                .text(textContent.toString())
+                .media(mediaList)
+                .build();
     }
 
     private void sendError(SseEmitter emitter, String msg) {

@@ -26,7 +26,7 @@ export interface Message {
   createdAt: string;
 }
 
-export type MessageVO = Message & { dateLabel?: string };
+export type MessageVO = Message & { dateLabel?: string; files?: FileInfo[] };
 
 export interface ModelConfig {
   id?: number;
@@ -36,6 +36,13 @@ export interface ModelConfig {
   apiKey: string;
   baseUrl: string | null;
   isActive: boolean;
+}
+
+export interface FileInfo {
+  id: number;
+  originalName: string;
+  mimeType: string;
+  size: number;
 }
 
 export interface LoginResponse {

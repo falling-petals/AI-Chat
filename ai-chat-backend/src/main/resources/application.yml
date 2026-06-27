@@ -22,3 +22,6 @@ logging:
 
 jwt:
   expiration: 86400000
+
+app:
+  upload-dir: ./uploads

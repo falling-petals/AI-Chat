@@ -1,5 +1,5 @@
 import request from './client';
-import type { Conversation, MessageVO, ModelConfig } from '../types';
+import type { Conversation, MessageVO, ModelConfig, FileInfo } from '../types';
 
 export const conversationApi = {
   list: () => request<Conversation[]>('/conversations'),
@@ -34,6 +34,26 @@ export const messageApi = {
 
   delete: (id: number) =>
     request<void>(`/chat/messages/${id}`, { method: 'DELETE' }),
+};
+
+export const fileApi = {
+  upload: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    return fetch('/api/files/upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    }).then(async (res) => {
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || '上传失败');
+      return json.data as FileInfo;
+    });
+  },
+
+  delete: (id: number) =>
+    request<void>(`/files/${id}`, { method: 'DELETE' }),
 };
 
 export const modelConfigApi = {
@@ -131,10 +151,11 @@ export function chatStream(
   onDone: () => void,
   onError: (msg: string) => void,
   onFinally?: () => void,
+  fileIds?: number[],
 ) {
   return readSSEStream(
     '/api/chat/stream',
-    { conversationId, content },
+    { conversationId, content, fileIds },
     onMessage, onThinking, onDone, onError, onFinally,
   );
 }

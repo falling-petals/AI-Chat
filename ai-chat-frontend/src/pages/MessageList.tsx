@@ -1,7 +1,7 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Brain, Pencil, Copy, Trash2, RefreshCw } from 'lucide-react';
+import { Brain, Pencil, Copy, Trash2, RefreshCw, File } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import type { MessageVO } from '../types';
 
@@ -10,6 +10,54 @@ interface MessageListProps {
   onEdit: (msg: MessageVO) => void;
   onDelete: (id: number) => Promise<void>;
   onRegenerate: (messageId: number) => void;
+}
+
+function FileAttachment({ file }: { file: { id: number; originalName: string; mimeType: string } }) {
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const isImage = file.mimeType?.startsWith('image/');
+
+  useEffect(() => {
+    if (!isImage) return;
+    let cancelled = false;
+    let blobUrl: string | null = null;
+    const token = localStorage.getItem('token');
+    fetch(`/api/files/${file.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then((res) => res.blob())
+      .then((blob) => {
+        if (!cancelled) {
+          blobUrl = URL.createObjectURL(blob);
+          setImgSrc(blobUrl);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [file.id, isImage]);
+
+  if (isImage) {
+    return (
+      <a href={imgSrc || '#'} target="_blank" rel="noopener noreferrer" className="block my-2">
+        {imgSrc ? (
+          <img src={imgSrc} alt={file.originalName} className="max-w-sm max-h-64 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition-opacity" loading="lazy" />
+        ) : (
+          <div className="w-32 h-24 rounded-lg bg-gray-100 animate-pulse" />
+        )}
+      </a>
+    );
+  }
+  return (
+    <a
+      href={`/api/files/${file.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 transition-colors"
+    >
+      <File className="w-4 h-4" />
+      <span className="truncate max-w-[200px]">{file.originalName}</span>
+    </a>
+  );
 }
 
 export default function MessageList({ messages, onEdit, onDelete, onRegenerate }: MessageListProps) {
@@ -78,10 +126,16 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                     </div>
                   </details>
                 )}
+                {msg.files && msg.files.length > 0 && (
+                  <div className="mb-2 space-y-1">
+                    {msg.files.map((file) => (
+                      <FileAttachment key={file.id} file={file} />
+                    ))}
+                  </div>
+                )}
                 <div className="prose prose-sm max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                 </div>
-                {/* Action buttons */}
                 <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {msg.role === 'user' && (
                     <button onClick={() => onEdit(msg)} className={userBtnClass} title="编辑">

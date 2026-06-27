@@ -10,5 +10,6 @@ public class Message {
     private String role;
     private String content;
     private String thinking;
+    private String fileIds;
     private LocalDateTime createdAt;
 }

@@ -1,4 +1,5 @@
-import { Send, X } from 'lucide-react';
+import { Send, X, Paperclip } from 'lucide-react';
+import type { FileInfo } from '../types';
 
 interface ChatInputProps {
   value: string;
@@ -8,13 +9,24 @@ interface ChatInputProps {
   disabled: boolean;
   errorMessage: string;
   editing?: boolean;
+  uploadedFiles: FileInfo[];
+  onUpload: (file: File) => Promise<void>;
+  onRemoveFile: (id: number) => void;
 }
 
-export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing }: ChatInputProps) {
+export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile }: ChatInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await onUpload(file);
+      e.target.value = '';
     }
   };
 
@@ -29,12 +41,33 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             </button>
           </div>
         )}
+        {uploadedFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {uploadedFiles.map((f) => (
+              <div key={f.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#6366F1]/10 text-xs text-[#6366F1]">
+                <span className="max-w-[120px] truncate">{f.originalName}</span>
+                <button onClick={() => onRemoveFile(f.id)} className="p-0.5 hover:bg-[#6366F1]/20 rounded cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         {errorMessage && (
           <div className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-600">
             {errorMessage}
           </div>
         )}
         <div className="flex items-start gap-2">
+          <button
+            onClick={() => document.getElementById('file-upload')?.click()}
+            disabled={disabled}
+            className="p-3 text-[#6366F1]/60 hover:text-[#6366F1] hover:bg-[#6366F1]/5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+            title="Attach file"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
+          <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" onChange={handleFileChange} disabled={disabled} />
           <textarea
             className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all resize-none"
             placeholder={disabled ? 'AI is thinking...' : 'Type a message...'}

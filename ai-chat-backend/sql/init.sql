@@ -50,10 +50,29 @@ CREATE TABLE model_config (
     UNIQUE KEY uk_user_model (user_id, provider, model_name)
 );
 
+CREATE TABLE file (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    conversation_id BIGINT DEFAULT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    stored_name VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    size BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    INDEX idx_user_files (user_id)
+);
+
+ALTER TABLE message ADD COLUMN file_ids TEXT DEFAULT NULL COMMENT '关联文件ID列表，JSON数组';
+
 -- ============================================================
 -- Migration (2026-06-27): 对话置顶/归档
 -- 已有数据库执行：
 --   ALTER TABLE conversation ADD COLUMN pinned TINYINT(1) NOT NULL DEFAULT 0;
 --   ALTER TABLE conversation ADD COLUMN archived TINYINT(1) NOT NULL DEFAULT 0;
 --   CREATE INDEX idx_user_archived ON conversation(user_id, archived);
+-- 
+-- Migration (2026-06-27): 文件上传
+--   CREATE TABLE file (...);
+--   ALTER TABLE message ADD COLUMN file_ids TEXT DEFAULT NULL;
 -- ============================================================

@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
-import { chatStream, regenerateStream } from '../api/chat';
-import type { MessageVO } from '../types';
+import { chatStream, regenerateStream, fileApi } from '../api/chat';
+import type { MessageVO, FileInfo } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import StreamingMessage from './StreamingMessage';
@@ -24,6 +24,7 @@ export default function Chat() {
   const [streamContent, setStreamContent] = useState('');
   const [thinkingContent, setThinkingContent] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
@@ -45,11 +46,26 @@ export default function Chat() {
     }
   }, []);
 
+  const handleUpload = useCallback(async (file: File) => {
+    try {
+      const info = await fileApi.upload(file);
+      setUploadedFiles((prev) => [...prev, info]);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : '上传失败');
+    }
+  }, []);
+
+  const handleRemoveFile = useCallback((id: number) => {
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
   const handleSend = useCallback(async () => {
     if (!input.trim() || streaming) return;
 
     const text = input;
+    const fileIds = uploadedFiles.map((f) => f.id);
     setInput('');
+    setUploadedFiles([]);
 
     if (editingMessage) {
       await startStream(async () => {
@@ -80,14 +96,12 @@ export default function Chat() {
             () => setStreaming(false),
           );
         } else {
-          // No AI message to regenerate (user edited but AI hasn't responded yet)
           setStreaming(false);
         }
       });
       return;
     }
 
-    // Normal send
     await startStream(async () => {
       let convId = currentConvId;
       if (!convId) {
@@ -102,6 +116,7 @@ export default function Chat() {
         content: text,
         thinking: null,
         createdAt: new Date().toISOString(),
+        files: uploadedFiles,
       });
 
       await chatStream(
@@ -122,9 +137,10 @@ export default function Chat() {
           setThinkingContent('');
         },
         () => setStreaming(false),
+        fileIds,
       );
     });
-  }, [input, streaming, currentConvId, editingMessage, createConversation, selectConversation,
+  }, [input, streaming, currentConvId, editingMessage, uploadedFiles, createConversation, selectConversation,
       setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream]);
 
   const handleEdit = useCallback((msg: MessageVO) => {
@@ -177,6 +193,7 @@ export default function Chat() {
     setCurrentConvId(null);
     setInput('');
     setEditingMessage(null);
+    setUploadedFiles([]);
   };
 
   return (
@@ -227,6 +244,9 @@ export default function Chat() {
           disabled={streaming}
           errorMessage={errorMessage}
           editing={!!editingMessage}
+          uploadedFiles={uploadedFiles}
+          onUpload={handleUpload}
+          onRemoveFile={handleRemoveFile}
         />
       </div>
     </div>
