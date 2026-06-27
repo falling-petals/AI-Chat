@@ -10,3 +10,5 @@ application-local.yaml
 application-local.yml
 .idea/
 *.tsbuildinfo
+uploads/
+ai-chat-backend/uploads/
