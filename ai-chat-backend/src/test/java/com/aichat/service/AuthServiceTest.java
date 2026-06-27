@@ -4,12 +4,14 @@ import com.aichat.common.Result;
 import com.aichat.dto.LoginRequest;
 import com.aichat.entity.User;
 import com.aichat.mapper.UserMapper;
+import com.aichat.service.impl.AuthServiceImpl;
 import com.aichat.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Map;
 
@@ -28,8 +30,11 @@ class AuthServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+
     @InjectMocks
-    private AuthService authService;
+    private AuthServiceImpl authService;
 
     @Test
     void loginShouldSucceedWhenAvatarIsNull() {
@@ -44,6 +49,7 @@ class AuthServiceTest {
         request.setPassword("test123");
 
         when(userMapper.selectOne(any())).thenReturn(user);
+        when(passwordEncoder.matches("test123", "cc03e747a6afbbcbf8be7668acfebee5")).thenReturn(true);
         when(jwtUtil.generate(1L, "test123")).thenReturn("mock-token");
 
         Result<?> result = authService.login(request);
