@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
@@ -20,6 +20,8 @@ export default function Chat() {
   const [streamContent, setStreamContent] = useState('');
   const [thinkingContent, setThinkingContent] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => { loadConversations(); }, []);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || streaming) return;
