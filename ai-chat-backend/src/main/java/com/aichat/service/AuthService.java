@@ -6,7 +6,9 @@ import com.aichat.dto.RegisterRequest;
 import com.aichat.entity.User;
 import com.aichat.mapper.UserMapper;
 import com.aichat.util.JwtUtil;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,12 +18,15 @@ public class AuthService {
 
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public AuthService(UserMapper userMapper, JwtUtil jwtUtil) {
+    public AuthService(UserMapper userMapper, JwtUtil jwtUtil, BCryptPasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Result<?> register(RegisterRequest req) {
         User exist = userMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
@@ -52,10 +57,10 @@ public class AuthService {
     }
 
     private String hashPassword(String raw) {
-        return org.springframework.util.DigestUtils.md5DigestAsHex(raw.getBytes());
+        return passwordEncoder.encode(raw);
     }
 
     private boolean verifyPassword(String raw, String hash) {
-        return hashPassword(raw).equals(hash);
+        return passwordEncoder.matches(raw, hash);
     }
 }

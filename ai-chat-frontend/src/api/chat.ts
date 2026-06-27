@@ -39,3 +39,68 @@ export const modelConfigApi = {
   delete: (id: number) =>
     request<void>(`/model-configs/${id}`, { method: 'DELETE' }),
 };
+
+export async function chatStream(
+  conversationId: number,
+  content: string,
+  onMessage: (text: string) => void,
+  onThinking: (text: string) => void,
+  onDone: () => void,
+  onError: (msg: string) => void,
+  onFinally?: () => void,
+) {
+  const token = localStorage.getItem('token');
+  const res = await fetch('/api/chat/stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ conversationId, content }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`发送失败（HTTP ${res.status}）`);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) {
+    throw new Error('未收到流式响应');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let eventType = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          eventType = line.slice(6).trim();
+          continue;
+        }
+        if (line.startsWith('data:')) {
+          const data = line.slice(5);
+          if (eventType === 'message') {
+            onMessage(data);
+          } else if (eventType === 'thinking') {
+            onThinking(data);
+          } else if (eventType === 'done') {
+            onDone();
+          } else if (eventType === 'error') {
+            onError(data.trim() || '发送失败，请检查模型配置');
+          }
+        }
+      }
+    }
+  } finally {
+    onFinally?.();
+  }
+}

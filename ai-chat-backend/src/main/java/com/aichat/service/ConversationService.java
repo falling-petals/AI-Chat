@@ -3,6 +3,7 @@ package com.aichat.service;
 import com.aichat.entity.Conversation;
 import com.aichat.mapper.ConversationMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -29,12 +30,14 @@ public class ConversationService {
                         .eq(Conversation::getUserId, userId));
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Long create(Long userId, Conversation conversation) {
         conversation.setUserId(userId);
         conversationMapper.insert(conversation);
         return conversation.getId();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long userId, Conversation conversation) {
         Conversation existing = getById(conversation.getId(), userId);
         if (existing != null) {
@@ -42,6 +45,7 @@ public class ConversationService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long userId, Long id) {
         conversationMapper.delete(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Conversation>()

@@ -3,6 +3,7 @@ package com.aichat.service;
 import com.aichat.entity.Message;
 import com.aichat.mapper.MessageMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class MessageService {
                         .orderByAsc(Message::getCreatedAt));
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Long save(Message message) {
         messageMapper.insert(message);
         return message.getId();

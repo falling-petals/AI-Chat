@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import reactor.core.Disposable;
 
 @Service
 public class ChatService {
@@ -40,7 +42,14 @@ public class ChatService {
     }
 
     public SseEmitter stream(Long userId, Long conversationId, String content) {
-        SseEmitter emitter = new SseEmitter(0L);
+        SseEmitter emitter = new SseEmitter(300_000L);
+        emitter.onCompletion(() -> log.debug("SSE completed for userId={}", userId));
+        emitter.onTimeout(() -> {
+            log.warn("SSE timed out for userId={}", userId);
+            sendEvent(emitter, "error", "请求超时，请重试");
+            emitter.complete();
+        });
+        emitter.onError(ex -> log.error("SSE error for userId={}: {}", userId, ex.getMessage()));
         log.debug("stream() called: userId={}, conversationId={}, content={}", userId, conversationId, content);
 
         ModelConfig config = modelConfigService.getActive(userId);
@@ -103,7 +112,8 @@ public class ChatService {
 
         try {
             log.debug("Starting stream...");
-            userModel.stream(new Prompt(messages)).subscribe(
+            AtomicReference<Disposable> disposableRef = new AtomicReference<>();
+            Disposable disposable = userModel.stream(new Prompt(messages)).subscribe(
                     chunk -> {
                         ChatResponse response = (ChatResponse) chunk;
                         var metadata = response.getResult().getOutput().getMetadata();
@@ -143,6 +153,13 @@ public class ChatService {
                         log.debug("SSE done event sent");
                     }
             );
+            disposableRef.set(disposable);
+            emitter.onCompletion(() -> {
+                log.debug("SSE completed, disposing subscription");
+                if (disposableRef.get() != null && !disposableRef.get().isDisposed()) {
+                    disposableRef.get().dispose();
+                }
+            });
             log.debug("Subscription returned, emitter ready");
         } catch (Exception e) {
             log.error("Stream setup error: {}", e.getMessage(), e);

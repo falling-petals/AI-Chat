@@ -3,6 +3,7 @@ package com.aichat.service;
 import com.aichat.entity.ModelConfig;
 import com.aichat.mapper.ModelConfigMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,16 +22,19 @@ public class ModelConfigService {
                         .eq(ModelConfig::getUserId, userId));
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void save(Long userId, ModelConfig config) {
         config.setUserId(userId);
         modelConfigMapper.insert(config);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long userId, ModelConfig config) {
         config.setUserId(userId);
         modelConfigMapper.updateById(config);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long userId, Long id) {
         modelConfigMapper.delete(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ModelConfig>()
