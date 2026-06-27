@@ -1,8 +1,11 @@
 package com.aichat.controller;
 
 import com.aichat.common.Result;
+import com.aichat.dto.ModelConfigRequest;
 import com.aichat.entity.ModelConfig;
 import com.aichat.service.ModelConfigService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,16 +28,28 @@ public class ModelConfigController {
     }
 
     @PostMapping
-    public Result<?> save(HttpServletRequest request, @RequestBody ModelConfig config) {
+    public Result<?> save(HttpServletRequest request, @RequestBody @Valid ModelConfigRequest req) {
         Long userId = (Long) request.getAttribute("userId");
+        ModelConfig config = new ModelConfig();
+        config.setProvider(req.getProvider());
+        config.setModelName(req.getModelName());
+        config.setApiKey(req.getApiKey());
+        config.setBaseUrl(req.getBaseUrl());
+        config.setIsActive(req.getIsActive());
         modelConfigService.save(userId, config);
         return Result.success(null);
     }
 
     @PutMapping("/{id}")
-    public Result<?> update(HttpServletRequest request, @PathVariable Long id, @RequestBody ModelConfig config) {
+    public Result<?> update(HttpServletRequest request, @PathVariable Long id, @RequestBody @Valid ModelConfigRequest req) {
         Long userId = (Long) request.getAttribute("userId");
+        ModelConfig config = new ModelConfig();
         config.setId(id);
+        config.setProvider(req.getProvider());
+        config.setModelName(req.getModelName());
+        config.setApiKey(req.getApiKey());
+        config.setBaseUrl(req.getBaseUrl());
+        config.setIsActive(req.getIsActive());
         modelConfigService.update(userId, config);
         return Result.success(null);
     }

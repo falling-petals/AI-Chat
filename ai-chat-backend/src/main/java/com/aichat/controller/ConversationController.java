@@ -2,6 +2,7 @@ package com.aichat.controller;
 
 import com.aichat.common.Result;
 import com.aichat.dto.CreateConversationRequest;
+import com.aichat.dto.UpdateConversationRequest;
 import com.aichat.entity.Conversation;
 import com.aichat.service.ConversationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,9 +45,12 @@ public class ConversationController {
     }
 
     @PutMapping("/{id}")
-    public Result<?> update(HttpServletRequest request, @PathVariable Long id, @RequestBody Conversation conv) {
+    public Result<?> update(HttpServletRequest request, @PathVariable Long id, @RequestBody UpdateConversationRequest req) {
         Long userId = (Long) request.getAttribute("userId");
+        Conversation conv = new Conversation();
         conv.setId(id);
+        conv.setTitle(req.getTitle());
+        conv.setSystemPrompt(req.getSystemPrompt());
         conversationService.update(userId, conv);
         return Result.success(null);
     }
