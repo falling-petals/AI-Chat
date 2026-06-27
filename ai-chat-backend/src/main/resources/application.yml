@@ -30,6 +30,7 @@ jwt:
 app:
   upload-dir: ./uploads
   file-extract-max-chars: 50000
+  chat-context-size: 30
 
 tavily:
   api-key: placeholder
