@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
 import { chatStream, regenerateStream } from '../api/chat';
-import type { Message } from '../types';
+import type { MessageVO } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import StreamingMessage from './StreamingMessage';
@@ -127,7 +127,7 @@ export default function Chat() {
   }, [input, streaming, currentConvId, editingMessage, createConversation, selectConversation,
       setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream]);
 
-  const handleEdit = useCallback((msg: Message) => {
+  const handleEdit = useCallback((msg: MessageVO) => {
     setInput(msg.content);
     setEditingMessage(msg);
   }, [setEditingMessage]);

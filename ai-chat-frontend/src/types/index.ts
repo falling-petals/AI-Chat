@@ -26,6 +26,8 @@ export interface Message {
   createdAt: string;
 }
 
+export type MessageVO = Message & { dateLabel?: string };
+
 export interface ModelConfig {
   id?: number;
   userId?: number;

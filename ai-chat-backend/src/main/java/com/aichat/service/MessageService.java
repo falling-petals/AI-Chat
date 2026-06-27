@@ -1,11 +1,12 @@
 package com.aichat.service;
 
+import com.aichat.dto.MessageVO;
 import com.aichat.entity.Message;
 
 import java.util.List;
 
 public interface MessageService {
-    List<Message> listByConversation(Long conversationId);
+    List<MessageVO> listByConversation(Long conversationId);
     Long save(Message message);
     Message getById(Long id);
     void update(Message message);

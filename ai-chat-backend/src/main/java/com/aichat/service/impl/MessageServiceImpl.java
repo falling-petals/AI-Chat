@@ -1,5 +1,6 @@
 package com.aichat.service.impl;
 
+import com.aichat.dto.MessageVO;
 import com.aichat.entity.Message;
 import com.aichat.mapper.MessageMapper;
 import com.aichat.service.MessageService;
@@ -7,7 +8,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -18,11 +24,41 @@ public class MessageServiceImpl implements MessageService {
         this.messageMapper = messageMapper;
     }
 
-    public List<Message> listByConversation(Long conversationId) {
-        return messageMapper.selectList(
+    public List<MessageVO> listByConversation(Long conversationId) {
+        List<Message> messages = messageMapper.selectList(
                 new LambdaQueryWrapper<Message>()
                         .eq(Message::getConversationId, conversationId)
                         .orderByAsc(Message::getCreatedAt));
+        return messages.stream().map(this::toMessageVO).collect(Collectors.toList());
+    }
+
+    private MessageVO toMessageVO(Message msg) {
+        MessageVO vo = new MessageVO();
+        vo.setId(msg.getId());
+        vo.setConversationId(msg.getConversationId());
+        vo.setRole(msg.getRole());
+        vo.setContent(msg.getContent());
+        vo.setThinking(msg.getThinking());
+        vo.setCreatedAt(msg.getCreatedAt());
+        vo.setDateLabel(computeDateLabel(msg.getCreatedAt()));
+        return vo;
+    }
+
+    private String computeDateLabel(LocalDateTime dateTime) {
+        if (dateTime == null) return "更早";
+        LocalDate today = LocalDate.now();
+        LocalDate msgDate = dateTime.toLocalDate();
+
+        if (msgDate.equals(today)) return "今天";
+        if (msgDate.equals(today.minusDays(1))) return "昨天";
+
+        LocalDate monday = today.with(java.time.DayOfWeek.MONDAY);
+        if (!msgDate.isBefore(monday)) {
+            String[] dayNames = {"", "周一", "周二", "周三", "周四", "周五", "周六", "周日"};
+            return dayNames[msgDate.getDayOfWeek().getValue()];
+        }
+
+        return "更早";
     }
 
     @Transactional(rollbackFor = Exception.class)

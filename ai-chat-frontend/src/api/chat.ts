@@ -1,5 +1,5 @@
 import request from './client';
-import type { Conversation, Message, ModelConfig } from '../types';
+import type { Conversation, MessageVO, ModelConfig } from '../types';
 
 export const conversationApi = {
   list: () => request<Conversation[]>('/conversations'),
@@ -24,7 +24,7 @@ export const conversationApi = {
 
 export const messageApi = {
   list: (conversationId: number) =>
-    request<Message[]>(`/chat/messages/${conversationId}`),
+    request<MessageVO[]>(`/chat/messages/${conversationId}`),
 
   update: (id: number, content: string) =>
     request<void>(`/chat/messages/${id}`, {

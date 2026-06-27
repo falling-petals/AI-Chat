@@ -2,6 +2,7 @@ package com.aichat.controller;
 
 import com.aichat.common.Result;
 import com.aichat.dto.ChatRequest;
+import com.aichat.dto.MessageVO;
 import com.aichat.dto.UpdateMessageRequest;
 import com.aichat.entity.Message;
 import com.aichat.service.ChatService;
@@ -35,7 +36,7 @@ public class ChatController {
     }
 
     @GetMapping("/messages/{conversationId}")
-    public Result<List<Message>> messages(@PathVariable Long conversationId) {
+    public Result<List<MessageVO>> messages(@PathVariable Long conversationId) {
         return Result.success(messageService.listByConversation(conversationId));
     }
 

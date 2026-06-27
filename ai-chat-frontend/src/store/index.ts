@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import type { Conversation, Message } from '../types';
+import type { Conversation, MessageVO } from '../types';
 import { conversationApi, messageApi } from '../api/chat';
 
 interface ChatStore {
   token: string | null;
   conversations: Conversation[];
   currentConvId: number | null;
-  messages: Message[];
+  messages: MessageVO[];
   loading: boolean;
-  editingMessage: Message | null;
+  editingMessage: MessageVO | null;
 
   setToken: (token: string | null) => void;
   loadConversations: () => Promise<void>;
@@ -18,10 +18,10 @@ interface ChatStore {
   togglePin: (id: number) => Promise<void>;
   toggleArchive: (id: number) => Promise<void>;
   setCurrentConvId: (id: number | null) => void;
-  appendMessage: (msg: Message) => void;
+  appendMessage: (msg: MessageVO) => void;
   updateMessage: (id: number, content: string) => Promise<void>;
   deleteMessage: (id: number) => Promise<void>;
-  setEditingMessage: (msg: Message | null) => void;
+  setEditingMessage: (msg: MessageVO | null) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
