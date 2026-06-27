@@ -13,6 +13,7 @@ import com.aichat.dto.SearchResult;
 import com.aichat.service.provider.ChatModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -26,8 +27,10 @@ import java.io.IOException;
 import com.aichat.service.FileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +57,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Value("${app.file-extract-max-chars:50000}")
     private int maxExtractChars;
+
+    @Value("${app.chat-context-size:30}")
+    private int chatContextSize;
 
     public ChatServiceImpl(Map<String, ChatModelProvider> providers,
                             ModelConfigService modelConfigService,
@@ -92,7 +98,7 @@ public class ChatServiceImpl implements ChatService {
         }
         messageMapper.insert(userMsg);
 
-        streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled);
+        streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt());
         return emitter;
     }
 
@@ -129,7 +135,7 @@ public class ChatServiceImpl implements ChatService {
             } catch (Exception ignored) {}
         }
 
-        streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, false);
+        streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, false, userMsg.getCreatedAt());
         return emitter;
     }
 
@@ -145,7 +151,7 @@ public class ChatServiceImpl implements ChatService {
         return emitter;
     }
 
-    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds, boolean searchEnabled) {
+    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds, boolean searchEnabled, LocalDateTime before) {
         ModelConfig config = modelConfigService.getActive(userId);
         if (config == null) {
             sendEvent(emitter, "error", "请先在设置页面配置并激活模型");
@@ -164,6 +170,28 @@ public class ChatServiceImpl implements ChatService {
         List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
         if (conv.getSystemPrompt() != null && !conv.getSystemPrompt().isBlank()) {
             messages.add(new SystemMessage(conv.getSystemPrompt()));
+        }
+
+        // Load recent conversation history (exclude current message by `before` timestamp)
+        List<com.aichat.entity.Message> historyMsgs = messageMapper.selectRecentContextMessages(
+                conv.getId(), before, chatContextSize);
+        if (!historyMsgs.isEmpty()) {
+            Collections.reverse(historyMsgs);
+            for (com.aichat.entity.Message hMsg : historyMsgs) {
+                if ("user".equals(hMsg.getRole())) {
+                    List<Long> hFileIds = new ArrayList<>();
+                    if (hMsg.getFileIds() != null && !hMsg.getFileIds().isBlank()) {
+                        try {
+                            hFileIds = objectMapper.readValue(hMsg.getFileIds(),
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
+                        } catch (Exception ignored) {}
+                    }
+                    messages.add(buildUserMessage(hMsg.getContent(), hFileIds, Set.of()));
+                } else if ("assistant".equals(hMsg.getRole())) {
+                    messages.add(new AssistantMessage(
+                            hMsg.getContent() != null ? hMsg.getContent() : ""));
+                }
+            }
         }
 
         final List<SearchResult> searchResults;
