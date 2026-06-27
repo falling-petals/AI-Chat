@@ -81,7 +81,7 @@ export default function Settings() {
   };
 
   const handleActivate = async (cfg: ModelConfig) => {
-    await modelConfigApi.update(cfg.id!, { isActive: true });
+    await modelConfigApi.activate(cfg.id!);
     await loadConfigs();
   };
 

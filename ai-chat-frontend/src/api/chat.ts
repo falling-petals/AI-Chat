@@ -45,6 +45,9 @@ export const modelConfigApi = {
       body: JSON.stringify(config),
     }),
 
+  activate: (id: number) =>
+    request<void>(`/model-configs/${id}/activate`, { method: 'PUT' }),
+
   delete: (id: number) =>
     request<void>(`/model-configs/${id}`, { method: 'DELETE' }),
 };

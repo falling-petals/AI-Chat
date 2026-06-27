@@ -43,6 +43,20 @@ public class ModelConfigServiceImpl implements ModelConfigService {
                         .eq(ModelConfig::getUserId, userId));
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void activate(Long userId, Long id) {
+        ModelConfig config = modelConfigMapper.selectById(id);
+        if (config == null || !config.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("配置不存在或无权操作");
+        }
+        modelConfigMapper.update(null,
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ModelConfig>()
+                        .eq(ModelConfig::getUserId, userId)
+                        .set(ModelConfig::getIsActive, false));
+        config.setIsActive(true);
+        modelConfigMapper.updateById(config);
+    }
+
     public ModelConfig getActive(Long userId) {
         return modelConfigMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ModelConfig>()

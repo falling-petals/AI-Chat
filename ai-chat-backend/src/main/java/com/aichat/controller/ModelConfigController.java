@@ -54,6 +54,13 @@ public class ModelConfigController {
         return Result.success(null);
     }
 
+    @PutMapping("/{id}/activate")
+    public Result<?> activate(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        modelConfigService.activate(userId, id);
+        return Result.success(null);
+    }
+
     @DeleteMapping("/{id}")
     public Result<?> delete(HttpServletRequest request, @PathVariable Long id) {
         Long userId = (Long) request.getAttribute("userId");
