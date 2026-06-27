@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Brain, Pencil, Copy, Trash2, RefreshCw, File } from 'lucide-react';
+import { Brain, Pencil, Copy, Trash2, RefreshCw, File, FileText, FileSpreadsheet, FileImage } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import type { MessageVO } from '../types';
 import { useChatStore } from '../store';
@@ -48,6 +48,14 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
       </a>
     );
   }
+  const mime = file.mimeType ?? '';
+  const FileIcon = mime.includes('pdf') ? FileText
+    : mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv') ? FileSpreadsheet
+    : mime.includes('presentation') || mime.includes('powerpoint') ? FileText
+    : mime.startsWith('text/') ? FileText
+    : mime.includes('word') || mime.includes('document') ? FileText
+    : File;
+
   return (
     <a
       href={`/api/files/${file.id}`}
@@ -55,7 +63,7 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 transition-colors"
     >
-      <File className="w-4 h-4" />
+      <FileIcon className="w-4 h-4" />
       <span className="truncate max-w-[200px]">{file.originalName}</span>
     </a>
   );

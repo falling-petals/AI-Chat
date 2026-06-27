@@ -69,7 +69,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           >
             <Paperclip className="w-5 h-5" />
           </button>
-          <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" onChange={handleFileChange} disabled={disabled} />
+          <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} />
           <button
             onClick={onToggleSearch}
             disabled={disabled}
