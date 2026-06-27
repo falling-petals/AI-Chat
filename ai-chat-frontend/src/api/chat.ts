@@ -19,6 +19,15 @@ export const conversationApi = {
 export const messageApi = {
   list: (conversationId: number) =>
     request<Message[]>(`/chat/messages/${conversationId}`),
+
+  update: (id: number, content: string) =>
+    request<void>(`/chat/messages/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    }),
+
+  delete: (id: number) =>
+    request<void>(`/chat/messages/${id}`, { method: 'DELETE' }),
 };
 
 export const modelConfigApi = {
@@ -40,9 +49,9 @@ export const modelConfigApi = {
     request<void>(`/model-configs/${id}`, { method: 'DELETE' }),
 };
 
-export async function chatStream(
-  conversationId: number,
-  content: string,
+async function readSSEStream(
+  endpoint: string,
+  body: object,
   onMessage: (text: string) => void,
   onThinking: (text: string) => void,
   onDone: () => void,
@@ -50,17 +59,17 @@ export async function chatStream(
   onFinally?: () => void,
 ) {
   const token = localStorage.getItem('token');
-  const res = await fetch('/api/chat/stream', {
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ conversationId, content }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    throw new Error(`发送失败（HTTP ${res.status}）`);
+    throw new Error(`请求失败（HTTP ${res.status}）`);
   }
 
   const reader = res.body?.getReader();
@@ -95,7 +104,7 @@ export async function chatStream(
           } else if (eventType === 'done') {
             onDone();
           } else if (eventType === 'error') {
-            onError(data.trim() || '发送失败，请检查模型配置');
+            onError(data.trim() || '操作失败，请重试');
           }
         }
       }
@@ -103,4 +112,35 @@ export async function chatStream(
   } finally {
     onFinally?.();
   }
+}
+
+export function chatStream(
+  conversationId: number,
+  content: string,
+  onMessage: (text: string) => void,
+  onThinking: (text: string) => void,
+  onDone: () => void,
+  onError: (msg: string) => void,
+  onFinally?: () => void,
+) {
+  return readSSEStream(
+    '/api/chat/stream',
+    { conversationId, content },
+    onMessage, onThinking, onDone, onError, onFinally,
+  );
+}
+
+export function regenerateStream(
+  messageId: number,
+  onMessage: (text: string) => void,
+  onThinking: (text: string) => void,
+  onDone: () => void,
+  onError: (msg: string) => void,
+  onFinally?: () => void,
+) {
+  return readSSEStream(
+    `/api/chat/messages/${messageId}/regenerate`,
+    {},
+    onMessage, onThinking, onDone, onError, onFinally,
+  );
 }

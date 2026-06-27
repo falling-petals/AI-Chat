@@ -8,6 +8,7 @@ interface ChatStore {
   currentConvId: number | null;
   messages: Message[];
   loading: boolean;
+  editingMessage: Message | null;
 
   setToken: (token: string | null) => void;
   loadConversations: () => Promise<void>;
@@ -16,6 +17,9 @@ interface ChatStore {
   deleteConversation: (id: number) => Promise<void>;
   setCurrentConvId: (id: number | null) => void;
   appendMessage: (msg: Message) => void;
+  updateMessage: (id: number, content: string) => Promise<void>;
+  deleteMessage: (id: number) => Promise<void>;
+  setEditingMessage: (msg: Message | null) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -24,6 +28,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   currentConvId: null,
   messages: [],
   loading: false,
+  editingMessage: null,
 
   setToken: (token) => set({ token }),
 
@@ -62,4 +67,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   appendMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
+
+  updateMessage: async (id: number, content: string) => {
+    await messageApi.update(id, content);
+    set((state) => ({
+      messages: state.messages.map((m) => (m.id === id ? { ...m, content } : m)),
+    }));
+  },
+
+  deleteMessage: async (id: number) => {
+    await messageApi.delete(id);
+    set((state) => ({
+      messages: state.messages.filter((m) => m.id !== id),
+    }));
+  },
+
+  setEditingMessage: (msg) => set({ editingMessage: msg }),
 }));

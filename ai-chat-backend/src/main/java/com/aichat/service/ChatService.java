@@ -4,4 +4,5 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface ChatService {
     SseEmitter stream(Long userId, Long conversationId, String content);
+    SseEmitter regenerate(Long userId, Long messageId);
 }

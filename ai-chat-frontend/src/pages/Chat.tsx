@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
-import { chatStream } from '../api/chat';
+import { chatStream, regenerateStream } from '../api/chat';
+import type { Message } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import StreamingMessage from './StreamingMessage';
@@ -12,7 +13,9 @@ export default function Chat() {
   const navigate = useNavigate();
   const {
     conversations, currentConvId, messages,
-    loadConversations, selectConversation, createConversation, deleteConversation, setCurrentConvId, appendMessage,
+    loadConversations, selectConversation, createConversation, deleteConversation,
+    setCurrentConvId, appendMessage, updateMessage, deleteMessage,
+    editingMessage, setEditingMessage,
   } = useChatStore();
 
   const [input, setInput] = useState('');
@@ -21,22 +24,73 @@ export default function Chat() {
   const [thinkingContent, setThinkingContent] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => { loadConversations(); }, []);
+  useEffect(() => { loadConversations(); }, [loadConversations]);
 
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || streaming) return;
-
-    const userMsg = input;
-    setInput('');
+  const startStream = useCallback(async (
+    streamFn: () => Promise<void>,
+  ) => {
     setStreaming(true);
     setStreamContent('');
     setThinkingContent('');
     setErrorMessage('');
-
     try {
+      await streamFn();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '操作失败，请稍后重试';
+      setErrorMessage(message);
+      setStreaming(false);
+      setStreamContent('');
+      setThinkingContent('');
+    }
+  }, []);
+
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || streaming) return;
+
+    const text = input;
+    setInput('');
+
+    if (editingMessage) {
+      await startStream(async () => {
+        await updateMessage(editingMessage.id, text);
+        setEditingMessage(null);
+
+        const allMessages = useChatStore.getState().messages;
+        const editIdx = allMessages.findIndex(m => m.id === editingMessage.id);
+        const nextAiMsg = allMessages.slice(editIdx + 1).find(m => m.role === 'assistant');
+
+        if (nextAiMsg) {
+          await regenerateStream(
+            nextAiMsg.id,
+            (t) => setStreamContent((prev) => prev + t),
+            (t) => setThinkingContent((prev) => prev + t),
+            async () => {
+              setStreaming(false);
+              setStreamContent('');
+              setThinkingContent('');
+              if (currentConvId) await selectConversation(currentConvId);
+            },
+            (msg) => {
+              setErrorMessage(msg);
+              setStreaming(false);
+              setStreamContent('');
+              setThinkingContent('');
+            },
+            () => setStreaming(false),
+          );
+        } else {
+          // No AI message to regenerate (user edited but AI hasn't responded yet)
+          setStreaming(false);
+        }
+      });
+      return;
+    }
+
+    // Normal send
+    await startStream(async () => {
       let convId = currentConvId;
       if (!convId) {
-        convId = await createConversation(userMsg.slice(0, 50));
+        convId = await createConversation(text.slice(0, 50));
         setCurrentConvId(convId);
       }
 
@@ -44,19 +98,16 @@ export default function Chat() {
         id: Date.now(),
         conversationId: convId,
         role: 'user',
-        content: userMsg,
+        content: text,
         thinking: null,
         createdAt: new Date().toISOString(),
       });
 
-      // Clear error on each new send if it was showing
-      setErrorMessage('');
-
       await chatStream(
         convId,
-        userMsg,
-        (text) => setStreamContent((prev) => prev + text),
-        (text) => setThinkingContent((prev) => prev + text),
+        text,
+        (t) => setStreamContent((prev) => prev + t),
+        (t) => setThinkingContent((prev) => prev + t),
         async () => {
           setStreaming(false);
           setStreamContent('');
@@ -69,25 +120,48 @@ export default function Chat() {
           setStreamContent('');
           setThinkingContent('');
         },
-        () => {
-          setStreaming(false);
-        },
+        () => setStreaming(false),
       );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '发送失败，请稍后重试';
-      setErrorMessage(message);
-      setStreaming(false);
-      setStreamContent('');
-      setThinkingContent('');
-    }
-  }, [input, streaming, currentConvId, createConversation, selectConversation, setCurrentConvId, appendMessage]);
+    });
+  }, [input, streaming, currentConvId, editingMessage, createConversation, selectConversation,
+      setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  const handleEdit = useCallback((msg: Message) => {
+    setInput(msg.content);
+    setEditingMessage(msg);
+  }, [setEditingMessage]);
+
+  const handleCancelEdit = useCallback(() => {
+    setInput('');
+    setEditingMessage(null);
+  }, [setEditingMessage]);
+
+  const handleDelete = useCallback(async (id: number) => {
+    await deleteMessage(id);
+  }, [deleteMessage]);
+
+  const handleRegenerate = useCallback(async (messageId: number) => {
+    await startStream(async () => {
+      await regenerateStream(
+        messageId,
+        (t) => setStreamContent((prev) => prev + t),
+        (t) => setThinkingContent((prev) => prev + t),
+        async () => {
+          setStreaming(false);
+          setStreamContent('');
+          setThinkingContent('');
+          if (currentConvId) await selectConversation(currentConvId);
+        },
+        (msg) => {
+          setErrorMessage(msg);
+          setStreaming(false);
+          setStreamContent('');
+          setThinkingContent('');
+        },
+        () => setStreaming(false),
+      );
+    });
+  }, [currentConvId, selectConversation, startStream]);
 
   const setToken = useChatStore((s) => s.setToken);
 
@@ -101,6 +175,7 @@ export default function Chat() {
   const handleNewChat = () => {
     setCurrentConvId(null);
     setInput('');
+    setEditingMessage(null);
   };
 
   return (
@@ -117,7 +192,12 @@ export default function Chat() {
       <div className="flex-1 flex flex-col">
         {currentConvId ? (
           <>
-            <MessageList messages={messages} />
+            <MessageList
+              messages={messages}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onRegenerate={handleRegenerate}
+            />
             <StreamingMessage
               content={streamContent}
               thinking={thinkingContent}
@@ -140,9 +220,10 @@ export default function Chat() {
             if (errorMessage) setErrorMessage('');
           }}
           onSend={handleSend}
-          onKeyDown={handleKeyDown}
+          onCancelEdit={handleCancelEdit}
           disabled={streaming}
           errorMessage={errorMessage}
+          editing={!!editingMessage}
         />
       </div>
     </div>
