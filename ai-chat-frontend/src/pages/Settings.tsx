@@ -61,6 +61,7 @@ export default function Settings() {
         setForm(emptyForm);
         setEditingId(null);
         setShowForm(false);
+        toast.success(editingId !== null ? '修改成功' : '添加成功');
         await loadConfigs();
       } finally {
         setLoading(false);
@@ -84,6 +85,7 @@ export default function Settings() {
   const handleDelete = async (id: number) => {
     try {
       await modelConfigApi.delete(id);
+      toast.success('删除成功');
       await loadConfigs();
     } catch (err: any) {
       toast.error(err.message || '删除失败');
@@ -93,6 +95,7 @@ export default function Settings() {
   const handleActivate = async (cfg: ModelConfig) => {
     try {
       await modelConfigApi.activate(cfg.id!);
+      toast.success('已设为当前模型');
       await loadConfigs();
     } catch (err: any) {
       toast.error(err.message || '激活失败');
@@ -136,7 +139,7 @@ export default function Settings() {
                     <span className="px-2 py-0.5 bg-[#6366F1]/10 text-[#6366F1] text-xs font-medium rounded-md">{cfg.provider}</span>
                     <span className="font-medium text-[#1E1B4B] dark:text-slate-100">{cfg.modelName}</span>
                     {cfg.isActive && (
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-md">当前使用</span>
+                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 text-xs font-medium rounded-md">当前使用</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-[#64748B] dark:text-slate-400">
@@ -154,14 +157,14 @@ export default function Settings() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {!cfg.isActive && (
-                    <button onClick={() => handleActivate(cfg)} className="p-2 hover:bg-green-50 rounded-lg transition-colors cursor-pointer" title="设为当前使用">
+                      <button onClick={() => handleActivate(cfg)} className="p-2 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors cursor-pointer" title="设为当前使用">
                       <Check className="w-4 h-4 text-[#94A3B8] hover:text-green-500" />
                     </button>
                   )}
                   <button onClick={() => handleEdit(cfg)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer" title="编辑">
                     <Bookmark className="w-4 h-4 text-[#94A3B8] hover:text-[#6366F1]" />
                   </button>
-                  <button onClick={() => handleDelete(cfg.id!)} className="p-2 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="删除">
+                  <button onClick={() => handleDelete(cfg.id!)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors cursor-pointer" title="删除">
                     <Trash2 className="w-4 h-4 text-[#94A3B8] hover:text-red-500 dark:hover:text-red-400" />
                   </button>
                 </div>
