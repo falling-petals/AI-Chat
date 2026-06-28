@@ -1,4 +1,4 @@
-import { Send, X, Paperclip, Search, Square } from 'lucide-react';
+import { FileText, Paperclip, Search, Square, ArrowUp } from 'lucide-react';
 import type { UploadFileItem } from '../hooks/useFileUpload';
 
 interface ChatInputProps {
@@ -59,64 +59,36 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
   };
 
   return (
-    <div className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3">
-      <div className="max-w-4xl mx-auto space-y-2">
-        {editing && (
-          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-500/10 text-xs text-brand-600 dark:text-brand-400">
-            <span>Editing message</span>
-            <button onClick={onCancelEdit} className="p-0.5 hover:bg-brand-500/20 rounded cursor-pointer">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-        {uploadedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {uploadedFiles.map((f) => (
-              <div key={f.fileInfo.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-brand-500/10 text-xs text-brand-600 dark:text-brand-400">
-                <span className="max-w-[120px] truncate">{f.fileInfo.originalName}</span>
-                {f.uploading ? (
-                  <div className="w-16 h-1.5 bg-brand-500/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${f.progress}%` }} />
-                  </div>
-                ) : (
-                  <button onClick={() => onRemoveFile(f.fileInfo.id)} className="p-0.5 hover:bg-brand-500/20 rounded cursor-pointer">
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex items-end gap-2 bg-zinc-100 dark:bg-zinc-800 rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-brand-500/30 focus-within:bg-white dark:focus-within:bg-zinc-800 transition-all">
-          <button
-            onClick={() => document.getElementById('file-upload')?.click()}
-            disabled={disabled}
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
-            title="Attach file"
-          >
-            <Paperclip className="w-5 h-5" />
-          </button>
-          <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} multiple />
-          <button
-            onClick={onToggleSearch}
-            disabled={disabled}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer shrink-0 ${
-              searchEnabled
-                ? 'bg-brand-500 text-white'
-                : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-            title="Web search"
-          >
-            <Search className="w-5 h-5" />
-          </button>
+    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="rounded-lg border border-zinc-200 dark:border-zinc-700">
+          {uploadedFiles.length > 0 && (
+            <div className="flex gap-2 p-2 border-b border-zinc-200 dark:border-zinc-700">
+              {uploadedFiles.map((f) => (
+                <div key={f.fileInfo.id} className="flex items-center gap-1 text-xs text-zinc-500 bg-zinc-100 dark:bg-zinc-800 rounded px-2 py-1">
+                  <FileText className="w-3 h-3" />
+                  <span>{f.fileInfo.originalName}</span>
+                  <button onClick={() => onRemoveFile(f.fileInfo.id)} className="hover:text-zinc-700 dark:hover:text-zinc-300">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {editing && (
+            <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-200 dark:border-zinc-700">
+              <span className="text-xs text-zinc-500">编辑消息</span>
+              <button onClick={onCancelEdit} className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">取消</button>
+            </div>
+          )}
+
           <textarea
-            className="flex-1 px-1 py-1.5 bg-transparent text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none resize-none text-sm leading-relaxed"
-            placeholder={disabled ? 'AI is thinking...' : 'Type a message...'}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
+            placeholder={disabled ? 'AI is thinking...' : '输入消息...'}
             disabled={disabled}
+            className="w-full bg-transparent px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none resize-none"
             rows={1}
             style={{ maxHeight: '200px' }}
             onInput={(e) => {
@@ -125,23 +97,36 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
               el.style.height = Math.min(el.scrollHeight, 200) + 'px';
             }}
           />
-          {streaming ? (
+
+          <div className="flex items-center justify-between px-2 pb-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => document.getElementById('file-upload')?.click()}
+                disabled={disabled}
+                className="p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+                title="Attach file"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+              <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} multiple />
+              <button
+                onClick={onToggleSearch}
+                disabled={disabled}
+                className={`p-1.5 rounded transition-colors ${searchEnabled ? 'text-sky-500 bg-zinc-100 dark:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'} disabled:opacity-30`}
+                title="Web search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
             <button
-              onClick={onStop}
-              className="p-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all cursor-pointer shrink-0"
-              title="Stop generating"
+              onClick={streaming ? onStop : onSend}
+              disabled={!value.trim() && !streaming && !editing}
+              className="p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+              title={streaming ? 'Stop generating' : 'Send'}
             >
-              <Square className="w-4 h-4" />
+              {streaming ? <Square className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
             </button>
-          ) : (
-            <button
-              onClick={onSend}
-              disabled={disabled || !value.trim()}
-              className="p-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
