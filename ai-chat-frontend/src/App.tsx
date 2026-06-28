@@ -25,7 +25,7 @@ function App() {
   }, [theme]);
 
   return (
-    <><Toaster position="top-center" richColors /><BrowserRouter>
+    <><Toaster position="top-center" /><BrowserRouter>
       <Routes>
         <Route path="/login" element={token ? <Navigate to="/" /> : <Login />} />
         <Route path="/register" element={token ? <Navigate to="/" /> : <Register />} />
