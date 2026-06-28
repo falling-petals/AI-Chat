@@ -1,4 +1,4 @@
-import { MessageSquare, Plus, Trash2, Pin, PinOff, Archive, ArchiveRestore, Search, Settings, LogOut, ChevronDown, ChevronRight, Bot } from 'lucide-react';
+﻿import { Plus, Trash2, Pin, PinOff, Archive, ArchiveRestore, Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { useState, useMemo } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
@@ -65,77 +65,69 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
   return (
     <>
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onToggleSidebar} />
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={onToggleSidebar} />
       )}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-72
-        transform transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-        bg-zinc-50 dark:bg-zinc-900 flex flex-col border-r border-zinc-200 dark:border-zinc-800
+      <aside className={`
+        fixed md:relative z-40 h-full
+        w-60 flex-shrink-0
+        bg-[#f8f8f9] dark:bg-[#0f0f0f]
+        border-r border-zinc-200 dark:border-zinc-800
+        flex flex-col
+        transition-transform duration-200
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-100">AI Chat</span>
-            </div>
-            <div className="flex items-center gap-0.5">
-              <ThemeToggle />
-              <button onClick={onSettings} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer" title="Settings">
-                <Settings className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-              </button>
-              <button onClick={onLogout} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer" title="Logout">
-                <LogOut className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-              </button>
-            </div>
-          </div>
-          <button
-            onClick={onNewChat}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors text-sm font-medium cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            New Chat
-          </button>
-          <div className="relative mt-2">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="搜索对话..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
-            />
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">AI Chat</span>
+          <div className="flex items-center gap-0.5">
+            <ThemeToggle />
+            <button onClick={onSettings} className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer" title="Settings">
+              <Settings className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+            </button>
+            <button onClick={onLogout} className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer" title="Logout">
+              <LogOut className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+            </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-0.5">
+        <button
+          onClick={onNewChat}
+          className="mx-3 mb-2 flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          新对话
+        </button>
+
+        <div className="mx-3 mb-2">
+          <input
+            type="text"
+            placeholder="搜索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent px-2 py-1 text-sm text-zinc-600 dark:text-zinc-400 placeholder-zinc-400 outline-none"
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-0.5">
           {groups.map((group) => (
             <div key={group.label}>
-              <div className="px-3 py-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+              <div className="px-3 py-1 text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
                 {group.label}
               </div>
               {group.items.map((conv) => (
                 <div
                   key={conv.id}
                   onClick={() => onSelect(conv.id)}
-                  className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
+                  className={`group flex items-center gap-2 px-3 py-2 mx-2 rounded-md cursor-pointer transition-colors ${
                     currentConvId === conv.id
-                      ? 'bg-brand-500/10 text-brand-600 dark:text-brand-400 font-medium'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
                   }`}
                 >
-                  {conv.pinned
-                    ? <Pin className="w-4 h-4 shrink-0" fill="currentColor" />
-                    : <MessageSquare className="w-4 h-4 shrink-0" />
-                  }
-                  <span className="text-sm truncate flex-1">{conv.title || 'New Chat'}</span>
+                  <span className="text-sm truncate flex-1">{conv.title || '新对话'}</span>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
                     <button
                       onClick={(e) => { e.stopPropagation(); onTogglePin(conv.id); }}
-                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-lg cursor-pointer"
+                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title={conv.pinned ? '取消置顶' : '置顶'}
                     >
                       {conv.pinned
@@ -145,14 +137,14 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onToggleArchive(conv.id); }}
-                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-lg cursor-pointer"
+                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title="归档"
                     >
                       <Archive className="w-3.5 h-3.5 text-zinc-400" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
-                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-lg cursor-pointer"
+                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title="删除"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
@@ -171,13 +163,12 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
 
           {archived.length > 0 && (
             <>
-              <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-800">
+              <div className="pt-3 mt-3 mx-2 border-t border-zinc-200 dark:border-zinc-800">
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
                 >
-                  {showArchived ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  <Archive className="w-4 h-4" />
+                  {showArchived ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                   <span>已归档（{archived.length}）</span>
                 </button>
               </div>
@@ -185,25 +176,24 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                 <div
                   key={conv.id}
                   onClick={() => onSelect(conv.id)}
-                  className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all opacity-60 hover:opacity-100 ${
+                  className={`group flex items-center gap-2 px-3 py-2 mx-2 rounded-md cursor-pointer transition-colors ${
                     currentConvId === conv.id
-                      ? 'bg-brand-500/10 text-brand-600 dark:text-brand-400'
-                      : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
+                      : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
-                  <Archive className="w-4 h-4 shrink-0" />
-                  <span className="text-sm truncate flex-1">{conv.title || 'New Chat'}</span>
+                  <span className="text-sm truncate flex-1">{conv.title || '新对话'}</span>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
                     <button
                       onClick={(e) => { e.stopPropagation(); onToggleArchive(conv.id); }}
-                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-lg cursor-pointer"
+                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title="恢复"
                     >
                       <ArchiveRestore className="w-3.5 h-3.5 text-zinc-400" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
-                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-lg cursor-pointer"
+                      className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title="删除"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
@@ -214,7 +204,7 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
             </>
           )}
         </div>
-      </div>
+      </aside>
     </>
   );
 }
