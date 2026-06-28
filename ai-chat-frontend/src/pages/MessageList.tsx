@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { Brain, Pencil, Copy, Trash2, RefreshCw, File, FileText, FileSpreadsheet } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import type { MessageVO } from '../types';
@@ -131,7 +132,7 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                     </summary>
                     <div className="mt-2 pl-3 border-l-2 border-[#6366F1]/20">
                       <div className="prose prose-sm max-w-none text-[#475569]">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
                       </div>
                     </div>
                   </details>
@@ -144,7 +145,7 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                   </div>
                 )}
                 <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                 </div>
                 {msg.role === 'assistant' && (() => {
                   const results = messageSearchResults[msg.id];

@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { Brain } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 
@@ -28,7 +29,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
         )}
         {content ? (
           <div className="px-4 py-3 prose prose-sm max-w-none text-[#1E1B4B]">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{content}</ReactMarkdown>
           </div>
         ) : streaming && !thinking && (
           <div className="px-4 py-4 flex items-center gap-1.5 text-[#6366F1]">
