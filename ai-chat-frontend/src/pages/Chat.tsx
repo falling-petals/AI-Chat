@@ -8,7 +8,6 @@ import { useEditMessage } from '../hooks/useEditMessage';
 import type { MessageVO } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
-import StreamingMessage from './StreamingMessage';
 import ChatInput from './ChatInput';
 
 export default function Chat() {
@@ -122,14 +121,12 @@ export default function Chat() {
           <>
             <MessageList
               messages={messages}
+              streaming={streaming}
+              streamContent={streamContent}
+              thinkingContent={thinkingContent}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onRegenerate={handleRegenerate}
-            />
-            <StreamingMessage
-              content={streamContent}
-              thinking={thinkingContent}
-              streaming={streaming}
             />
           </>
         ) : (

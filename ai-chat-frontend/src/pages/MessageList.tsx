@@ -1,18 +1,31 @@
-import { useEffect, useRef, useMemo, useState } from 'react';
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Brain, Pencil, Copy, Trash2, RefreshCw, File, FileText, FileSpreadsheet } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
+import StreamingMessage from './StreamingMessage';
 import type { MessageVO } from '../types';
 import { useChatStore } from '../store';
 
 interface MessageListProps {
   messages: MessageVO[];
+  streaming?: boolean;
+  streamContent?: string;
+  thinkingContent?: string;
   onEdit: (msg: MessageVO) => void;
   onDelete: (id: number) => Promise<void>;
   onRegenerate: (messageId: number) => void;
 }
+
+interface StreamItem {
+  _stream: true;
+  content: string;
+  thinking: string;
+}
+
+type ListItem = MessageVO | StreamItem;
 
 function FileAttachment({ file }: { file: { id: number; originalName: string; mimeType: string } }) {
   const [imgSrc, setImgSrc] = useState<string | null>(null);
@@ -70,13 +83,40 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
   );
 }
 
-export default function MessageList({ messages, onEdit, onDelete, onRegenerate }: MessageListProps) {
+function DateDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-3 mt-2 px-4">
+      <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
+      <span className="text-xs text-gray-400 dark:text-slate-500 font-medium shrink-0">{label}</span>
+      <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700" />
+    </div>
+  );
+}
+
+export default function MessageList({
+  messages, streaming = false, streamContent = '', thinkingContent = '',
+  onEdit, onDelete, onRegenerate,
+}: MessageListProps) {
   const messageSearchResults = useChatStore((s) => s.messageSearchResults);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  const allItems = useMemo<ListItem[]>(() => {
+    if (streaming || streamContent || thinkingContent) {
+      return [...messages, { _stream: true as const, content: streamContent, thinking: thinkingContent }];
+    }
+    return messages;
+  }, [messages, streaming, streamContent, thinkingContent]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isAtBottom && virtuosoRef.current) {
+      virtuosoRef.current.scrollToIndex({ index: allItems.length - 1, behavior: 'smooth' });
+    }
+  }, [allItems.length, streamContent, isAtBottom]);
+
+  const atBottomStateChange = useCallback((atBottom: boolean) => {
+    setIsAtBottom(atBottom);
+  }, []);
 
   const handleCopy = async (msg: MessageVO) => {
     try {
@@ -94,31 +134,27 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
   const userBtnClass = 'p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/20 transition-all cursor-pointer';
   const asstBtnClass = 'p-1 rounded-lg text-[#6366F1]/60 hover:text-[#6366F1] hover:bg-[#6366F1]/10 transition-all cursor-pointer';
 
-  const groups = useMemo(() => {
-    const result: { label: string; messages: MessageVO[] }[] = [];
-    for (const msg of messages) {
-      const label = msg.dateLabel ?? '更早';
-      const last = result[result.length - 1];
-      if (last && last.label === label) {
-        last.messages.push(msg);
-      } else {
-        result.push({ label, messages: [msg] });
-      }
-    }
-    return result;
-  }, [messages]);
-
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {groups.map((group) => (
-        <div key={group.label}>
-          <div className="flex items-center gap-3 mb-3 mt-2">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 dark:text-slate-500 font-medium shrink-0">{group.label}</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-          {group.messages.map((msg) => (
-            <div key={msg.id} className={`flex mb-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <Virtuoso
+      ref={virtuosoRef}
+      className="flex-1"
+      data={allItems}
+      itemContent={(index, item) => {
+        if ('_stream' in item) {
+          return (
+            <div className="px-4 mb-4">
+              <StreamingMessage content={item.content} thinking={item.thinking} streaming={streaming} />
+            </div>
+          );
+        }
+        const msg = item;
+        const prev = index > 0 ? allItems[index - 1] : undefined;
+        const prevMsg = prev && !('_stream' in prev) ? prev as MessageVO : undefined;
+        const showDateLabel = index === 0 || msg.dateLabel !== prevMsg?.dateLabel;
+        return (
+          <>
+            {showDateLabel && <DateDivider label={msg.dateLabel ?? '更早'} />}
+            <div className={`flex mb-4 px-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`group relative max-w-[70%] px-4 py-3 rounded-2xl ${
                 msg.role === 'user'
                   ? 'bg-[#6366F1] text-white'
@@ -184,10 +220,11 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      ))}
-      <div ref={messagesEndRef} />
-    </div>
+          </>
+        );
+      }}
+      atBottomStateChange={atBottomStateChange}
+      followOutput="smooth"
+    />
   );
 }
