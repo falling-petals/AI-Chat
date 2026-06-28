@@ -227,8 +227,8 @@ public class ChatServiceImpl implements ChatService {
         }
         messages.add(buildUserMessage(userContent, fileIds, extractedFileIds));
 
-        StringBuilder fullContent = new StringBuilder();
-        StringBuilder fullThinking = new StringBuilder();
+        StringBuffer fullContent = new StringBuffer();
+        StringBuffer fullThinking = new StringBuffer();
 
         AtomicReference<Disposable> disposableRef = new AtomicReference<>();
         AtomicBoolean savedToDb = new AtomicBoolean(false);
@@ -397,7 +397,7 @@ public class ChatServiceImpl implements ChatService {
     private void sendEvent(SseEmitter emitter, String name, String data) {
         try {
             emitter.send(SseEmitter.event().name(name).data(data));
-        } catch (IOException ignored) {}
+        } catch (IOException | IllegalStateException ignored) {}
     }
 
     void autoRenameConversation(Long userId, Long convId, String userContent) {
