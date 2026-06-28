@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Menu, Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
 import { useChatStream } from '../hooks/useChatStream';
 import { useFileUpload } from '../hooks/useFileUpload';
@@ -25,6 +25,12 @@ export default function Chat() {
 
   const [input, setInput] = useState('');
   const [searchEnabled, setSearchEnabled] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleSelectConv = useCallback(async (id: number) => {
+    await selectConversation(id);
+    setSidebarOpen(false);
+  }, [selectConversation]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
@@ -108,17 +114,25 @@ export default function Chat() {
       <Sidebar
         conversations={conversations}
         currentConvId={currentConvId}
-        onSelect={selectConversation}
+        onSelect={handleSelectConv}
         onDelete={deleteConversation}
         onTogglePin={togglePin}
         onToggleArchive={toggleArchive}
         onNewChat={handleNewChat}
         onSettings={() => navigate('/settings')}
         onLogout={handleLogout}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
       <div className="flex-1 flex flex-col">
         {currentConvId ? (
           <>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden fixed top-3 left-3 z-30 p-2 bg-white/80 dark:bg-slate-800/80 rounded-lg shadow cursor-pointer"
+            >
+              <Menu className="w-5 h-5 text-[#475569] dark:text-slate-400" />
+            </button>
             <MessageList
               messages={messages}
               streaming={streaming}

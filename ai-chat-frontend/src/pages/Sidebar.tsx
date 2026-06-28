@@ -1,6 +1,7 @@
 import { MessageSquare, Plus, Trash2, Pin, PinOff, Archive, ArchiveRestore, Search, Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { useState } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
 import type { Conversation } from '../types';
 
 interface SidebarProps {
@@ -13,20 +14,33 @@ interface SidebarProps {
   onNewChat: () => void;
   onSettings: () => void;
   onLogout: () => void;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
-export default function Sidebar({ conversations, currentConvId, onSelect, onDelete, onTogglePin, onToggleArchive, onNewChat, onSettings, onLogout }: SidebarProps) {
+export default function Sidebar({ conversations, currentConvId, onSelect, onDelete, onTogglePin, onToggleArchive, onNewChat, onSettings, onLogout, sidebarOpen, onToggleSidebar }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const matchesSearch = (c: Conversation) =>
-    !searchQuery || (c.title || '').toLowerCase().includes(searchQuery.toLowerCase());
+    !debouncedSearch || (c.title || '').toLowerCase().includes(debouncedSearch.toLowerCase());
 
   const active = conversations.filter((c) => !c.archived && matchesSearch(c));
   const archived = conversations.filter((c) => c.archived && matchesSearch(c));
 
   return (
-    <div className="w-72 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border-r border-white/20 dark:border-slate-700/50 flex flex-col">
+    <>
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={onToggleSidebar} />
+      )}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 w-72
+        transform transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0
+        bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border-r border-white/20 dark:border-slate-700/50 flex flex-col
+      `}>
       <div className="p-4 border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -153,5 +167,6 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
         )}
       </div>
     </div>
+    </>
   );
 }
