@@ -6,7 +6,10 @@ export interface UploadFileItem {
   fileInfo: FileInfo;
   progress: number;
   uploading: boolean;
+  _tmpId?: number;
 }
+
+let _nextId = 0;
 
 interface UseFileUploadReturn {
   files: UploadFileItem[];
@@ -43,19 +46,19 @@ export function useFileUpload(): UseFileUploadReturn {
   const [files, setFiles] = useState<UploadFileItem[]>([]);
 
   const addFile = useCallback(async (file: File) => {
-    const entry: UploadFileItem = { fileInfo: { id: 0, originalName: file.name, mimeType: file.type, size: file.size }, progress: 0, uploading: true };
+    const entry: UploadFileItem = { fileInfo: { id: 0, originalName: file.name, mimeType: file.type, size: file.size }, progress: 0, uploading: true, _tmpId: ++_nextId };
     setFiles((prev) => [...prev, entry]);
     try {
       const info = await uploadFile(file, (pct) => {
         setFiles((prev) => prev.map((f) =>
-          f.fileInfo.originalName === file.name && f.uploading ? { ...f, progress: pct } : f
+          f._tmpId === entry._tmpId && f.uploading ? { ...f, progress: pct } : f
         ));
       });
       setFiles((prev) => prev.map((f) =>
-        f.fileInfo.originalName === file.name && f.uploading ? { fileInfo: info, progress: 100, uploading: false } : f
+        f._tmpId === entry._tmpId && f.uploading ? { fileInfo: info, progress: 100, uploading: false } : f
       ));
     } catch (err) {
-      setFiles((prev) => prev.filter((f) => f.fileInfo.originalName !== file.name));
+      setFiles((prev) => prev.filter((f) => f._tmpId !== entry._tmpId));
       throw err;
     }
   }, []);

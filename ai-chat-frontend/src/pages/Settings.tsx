@@ -41,33 +41,31 @@ export default function Settings() {
     if (!form.modelName.trim() || !form.apiKey.trim()) return;
     setLoading(true);
     try {
-      try {
-        if (editingId !== null) {
-          await modelConfigApi.update(editingId, {
-            provider: form.provider,
-            modelName: form.modelName,
-            apiKey: form.apiKey,
-            baseUrl: form.baseUrl || null,
-          });
-        } else {
-          await modelConfigApi.save({
-            provider: form.provider,
-            modelName: form.modelName,
-            apiKey: form.apiKey,
-            baseUrl: form.baseUrl || null,
-            isActive: configs.length === 0,
-          });
-        }
-        setForm(emptyForm);
-        setEditingId(null);
-        setShowForm(false);
-        toast.success(editingId !== null ? '修改成功' : '添加成功');
-        await loadConfigs();
-      } finally {
-        setLoading(false);
+      if (editingId !== null) {
+        await modelConfigApi.update(editingId, {
+          provider: form.provider,
+          modelName: form.modelName,
+          apiKey: form.apiKey,
+          baseUrl: form.baseUrl || null,
+        });
+      } else {
+        await modelConfigApi.save({
+          provider: form.provider,
+          modelName: form.modelName,
+          apiKey: form.apiKey,
+          baseUrl: form.baseUrl || null,
+          isActive: configs.length === 0,
+        });
       }
+      setForm(emptyForm);
+      setEditingId(null);
+      setShowForm(false);
+      toast.success(editingId !== null ? '修改成功' : '添加成功');
+      try { await loadConfigs(); } catch { /* refresh failure not critical */ }
     } catch (err: any) {
       toast.error(err.message || '保存失败');
+    } finally {
+      setLoading(false);
     }
   };
 

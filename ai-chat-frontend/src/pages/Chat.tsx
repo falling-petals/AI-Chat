@@ -105,6 +105,7 @@ export default function Chat() {
   const handleNewChat = () => {
     setCurrentConvId(null);
     setInput('');
+    setSearchEnabled(false);
     cancelEdit();
     uploadedFiles.forEach(f => removeFile(f.fileInfo.id));
   };

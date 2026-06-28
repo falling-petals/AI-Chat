@@ -10,7 +10,6 @@ export function useChatStream() {
   const [errorMessage, setErrorMessage] = useState('');
   const abortRef = useRef<(() => void) | null>(null);
   const selectConversation = useChatStore((s) => s.selectConversation);
-  const appendMessage = useChatStore((s) => s.appendMessage);
   const createConversation = useChatStore((s) => s.createConversation);
   const setCurrentConvId = useChatStore((s) => s.setCurrentConvId);
 
