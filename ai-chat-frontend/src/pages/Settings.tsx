@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Check, Settings as SettingsIcon, Eye, EyeOff, Key, Bookmark } from 'lucide-react';
 import { modelConfigApi } from '../api/chat';
 import type { ModelConfig } from '../types';
+import { toast } from 'sonner';
 
 const PROVIDERS = ['dashscope', 'openai'];
 
@@ -28,8 +29,9 @@ export default function Settings() {
     try {
       const list = await modelConfigApi.list();
       setConfigs(list);
-    } catch {
-      navigate('/login');
+    } catch (err: any) {
+      toast.error(err.message);
+      if (err.message?.includes('401')) navigate('/login');
     }
   };
 
@@ -39,28 +41,32 @@ export default function Settings() {
     if (!form.modelName.trim() || !form.apiKey.trim()) return;
     setLoading(true);
     try {
-      if (editingId !== null) {
-        await modelConfigApi.update(editingId, {
-          provider: form.provider,
-          modelName: form.modelName,
-          apiKey: form.apiKey,
-          baseUrl: form.baseUrl || null,
-        });
-      } else {
-        await modelConfigApi.save({
-          provider: form.provider,
-          modelName: form.modelName,
-          apiKey: form.apiKey,
-          baseUrl: form.baseUrl || null,
-          isActive: configs.length === 0,
-        });
+      try {
+        if (editingId !== null) {
+          await modelConfigApi.update(editingId, {
+            provider: form.provider,
+            modelName: form.modelName,
+            apiKey: form.apiKey,
+            baseUrl: form.baseUrl || null,
+          });
+        } else {
+          await modelConfigApi.save({
+            provider: form.provider,
+            modelName: form.modelName,
+            apiKey: form.apiKey,
+            baseUrl: form.baseUrl || null,
+            isActive: configs.length === 0,
+          });
+        }
+        setForm(emptyForm);
+        setEditingId(null);
+        setShowForm(false);
+        await loadConfigs();
+      } finally {
+        setLoading(false);
       }
-      setForm(emptyForm);
-      setEditingId(null);
-      setShowForm(false);
-      await loadConfigs();
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      toast.error(err.message || '保存失败');
     }
   };
 
@@ -76,13 +82,21 @@ export default function Settings() {
   };
 
   const handleDelete = async (id: number) => {
-    await modelConfigApi.delete(id);
-    await loadConfigs();
+    try {
+      await modelConfigApi.delete(id);
+      await loadConfigs();
+    } catch (err: any) {
+      toast.error(err.message || '删除失败');
+    }
   };
 
   const handleActivate = async (cfg: ModelConfig) => {
-    await modelConfigApi.activate(cfg.id!);
-    await loadConfigs();
+    try {
+      await modelConfigApi.activate(cfg.id!);
+      await loadConfigs();
+    } catch (err: any) {
+      toast.error(err.message || '激活失败');
+    }
   };
 
   const cancelForm = () => {

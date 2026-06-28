@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/auth';
 import { useChatStore } from '../store';
 import { MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Login() {
   const setToken = useChatStore((s) => s.setToken);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,7 +20,7 @@ export default function Login() {
       setToken(res.token);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -50,7 +51,6 @@ export default function Login() {
               required
             />
           </div>
-          {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
           <button
             type="submit"
             className="w-full py-2.5 bg-[#6366F1] text-white rounded-xl font-medium hover:bg-[#4F46E5] transition-colors cursor-pointer"

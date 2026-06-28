@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api/auth';
 import { MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,7 +16,7 @@ export default function Register() {
       await register(username, password);
       navigate('/login');
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -46,7 +47,6 @@ export default function Register() {
               required
             />
           </div>
-          {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
           <button
             type="submit"
             className="w-full py-2.5 bg-[#6366F1] text-white rounded-xl font-medium hover:bg-[#4F46E5] transition-colors cursor-pointer"
