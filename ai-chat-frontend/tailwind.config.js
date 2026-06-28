@@ -9,7 +9,6 @@ export default {
       fontFamily: {
         sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
       },
-
     },
   },
   plugins: [require('@tailwindcss/typography')],

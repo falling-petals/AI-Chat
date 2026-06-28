@@ -17,7 +17,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
     <div>
       {thinking && (
         <details open className="mb-2">
-          <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 transition-colors">
+          <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
             <Brain className="w-3.5 h-3.5" />
             {streaming && !content ? 'Thinking...' : 'Thought'}
           </summary>
@@ -31,7 +31,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{content}</ReactMarkdown>
         </div>
       ) : streaming && !thinking && (
-        <div className="flex items-center gap-1.5 text-zinc-500">
+        <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
           <Brain className="w-4 h-4" />
           <span className="text-sm">Thinking</span>
           <span className="typing-dot">.</span>

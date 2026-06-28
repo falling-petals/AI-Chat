@@ -129,13 +129,12 @@ export default function Chat() {
       <div className="flex-1 flex flex-col min-w-0">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden fixed top-3 left-3 z-30 p-2 bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer"
+          className="lg:hidden fixed top-3 left-3 z-30 p-2 bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer"
         >
           <Menu className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
         </button>
         {currentConvId ? (
-          <>
-            <MessageList
+          <MessageList
               messages={messages}
               streaming={streaming}
               streamContent={streamContent}
@@ -144,7 +143,6 @@ export default function Chat() {
               onDelete={handleDelete}
               onRegenerate={handleRegenerate}
             />
-          </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
             <Bot className="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
