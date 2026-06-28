@@ -237,13 +237,14 @@ public class ChatServiceImpl implements ChatService {
             log.debug("SSE onCompletion for userId={}", userId);
             if (!savedToDb.getAndSet(true)) {
                 String partialContent = fullContent.toString();
-                if (!partialContent.isBlank()) {
+                String partialThinking = fullThinking.toString();
+                if (!partialContent.isBlank() || !partialThinking.isBlank()) {
                     Message assistantMsg = new Message();
                     assistantMsg.setConversationId(conv.getId());
                     assistantMsg.setRole("assistant");
                     assistantMsg.setContent(partialContent);
-                    if (!fullThinking.isEmpty()) {
-                        assistantMsg.setThinking(fullThinking.toString());
+                    if (!partialThinking.isBlank()) {
+                        assistantMsg.setThinking(partialThinking);
                     }
                     messageMapper.insert(assistantMsg);
                     log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
@@ -253,6 +254,10 @@ public class ChatServiceImpl implements ChatService {
                 disposableRef.get().dispose();
             }
         });
+
+        if (conv.getTitle() == null || conv.getTitle().isBlank()) {
+            autoRenameConversation(userId, conv.getId(), userContent);
+        }
 
         try {
             Disposable disposable = provider.stream(new Prompt(messages), config).subscribe(
@@ -304,10 +309,6 @@ public class ChatServiceImpl implements ChatService {
 
                         sendEvent(emitter, "done", "{\"messageId\":" + assistantMsg.getId() + "}");
                         emitter.complete();
-
-                        if (conv.getTitle() == null || conv.getTitle().isBlank()) {
-                            autoRenameConversation(userId, conv.getId(), userContent);
-                        }
                     }
             );
             disposableRef.set(disposable);
