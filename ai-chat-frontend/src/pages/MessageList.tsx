@@ -22,7 +22,7 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
     if (!isImage) return;
     let cancelled = false;
     let blobUrl: string | null = null;
-    const token = localStorage.getItem('token');
+    const token = useChatStore.getState().token;
     fetch(`/api/files/${file.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then((res) => res.blob())
       .then((blob) => {
