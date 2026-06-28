@@ -6,27 +6,27 @@ import { Copy, Check } from 'lucide-react';
 interface Props {
   className?: string;
   children?: React.ReactNode;
-  inline?: boolean;
 }
 
-export default function CodeBlock({ className, children, inline }: Props) {
-  if (inline) {
+export default function CodeBlock({ className, children }: Props) {
+  const code = String(children);
+  if (!className?.startsWith('language-') && !code.includes('\n')) {
     return <code className={className}>{children}</code>;
   }
   const [copied, setCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || '');
   const lang = match ? match[1] : '';
-  const code = String(children).replace(/\n$/, '');
+  const trimmedCode = code.replace(/\n$/, '');
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(trimmedCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // ignore clipboard errors
     }
-  }, [code]);
+    }, [trimmedCode]);
 
   return (
     <div className="relative group">
@@ -47,7 +47,7 @@ export default function CodeBlock({ className, children, inline }: Props) {
           margin: '0.75em 0',
         }}
       >
-        {code}
+        {trimmedCode}
       </SyntaxHighlighter>
     </div>
   );
