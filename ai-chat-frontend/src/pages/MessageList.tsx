@@ -3,7 +3,7 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Brain, Pencil, Copy, Trash2, RefreshCw, File, FileText, FileSpreadsheet, User, Bot } from 'lucide-react';
+import { Brain, File, FileText, FileSpreadsheet } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import StreamingMessage from './StreamingMessage';
 import type { MessageVO } from '../types';
@@ -55,9 +55,9 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
     return (
       <a href={imgSrc || '#'} target="_blank" rel="noopener noreferrer" className="block my-2">
         {imgSrc ? (
-          <img src={imgSrc} alt={file.originalName} className="max-w-sm max-h-64 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700 hover:opacity-90 transition-opacity" loading="lazy" />
+          <img src={imgSrc} alt={file.originalName} className="max-w-sm max-h-64 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700 hover:opacity-90 transition-opacity" loading="lazy" />
         ) : (
-          <div className="w-32 h-24 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+          <div className="w-32 h-24 rounded-lg bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
         )}
       </a>
     );
@@ -75,7 +75,7 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
       href={`/api/files/${file.id}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 transition-colors"
+      className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 transition-colors"
     >
       <FileIcon className="w-4 h-4" />
       <span className="truncate max-w-[200px]">{file.originalName}</span>
@@ -146,55 +146,56 @@ export default function MessageList({
         const prev = index > 0 ? allItems[index - 1] : undefined;
         const prevMsg = prev && !('_stream' in prev) ? prev as MessageVO : undefined;
         const showDateLabel = index === 0 || msg.dateLabel !== prevMsg?.dateLabel;
-        const isUser = msg.role === 'user';
-
         return (
           <>
             {showDateLabel && <DateDivider label={msg.dateLabel ?? '更早'} />}
-            <div className={`flex gap-3 px-4 py-2 group ${isUser ? 'flex-row-reverse' : ''}`}>
-              <div className="shrink-0">
-                {isUser ? (
-                  <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center">
-                    <User className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            {msg.role === 'user' ? (
+              <div className="flex justify-end px-4 py-2 group">
+                <div className="max-w-3xl text-right">
+                  {msg.files && msg.files.length > 0 && (
+                    <div className="mb-2 flex flex-wrap justify-end gap-1">
+                      {msg.files.map((file) => (
+                        <FileAttachment key={file.id} file={file} />
+                      ))}
+                    </div>
+                  )}
+                  <div className="prose prose-sm max-w-none text-left text-zinc-800 dark:text-zinc-200">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                   </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                  <div className="flex gap-3 justify-end mt-1 text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => onEdit(msg)} className="hover:text-zinc-600 dark:hover:text-zinc-300">编辑</button>
+                    <button onClick={() => handleCopy(msg.content)} className="hover:text-zinc-600 dark:hover:text-zinc-300">复制</button>
+                    <button onClick={() => handleDeleteMsg(msg.id)} className="hover:text-zinc-600 dark:hover:text-zinc-300">删除</button>
                   </div>
-                )}
+                </div>
               </div>
-              <div className={`flex-1 min-w-0 max-w-[800px] ${isUser ? 'items-end' : ''}`}>
-                <div className={`rounded-2xl px-4 py-3 ${
-                  isUser
-                    ? 'bg-brand-500 text-white rounded-br-md'
-                    : 'bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-bl-md'
-                }`}>
+            ) : (
+              <div className="flex justify-start px-4 py-2 group">
+                <div className="max-w-3xl">
                   {msg.thinking && (
                     <details className="mb-2">
-                      <summary className="flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none transition-colors
-                        ${isUser ? 'text-white/80 hover:text-white' : 'text-brand-500 hover:text-brand-600'}"
-                        style={isUser ? { color: 'rgba(255,255,255,0.8)' } : {}}>
+                      <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
                         <Brain className="w-3.5 h-3.5" />
                         Thought
                       </summary>
-                      <div className={`mt-2 pl-3 border-l-2 ${isUser ? 'border-white/30' : 'border-brand-500/20'}`}>
-                        <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : ''}`}>
+                      <div className="mt-2 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
+                        <div className="prose prose-sm max-w-none">
                           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
                         </div>
                       </div>
                     </details>
                   )}
                   {msg.files && msg.files.length > 0 && (
-                    <div className={`mb-2 space-y-1 ${isUser ? '[&_a]:text-white/80 [&_a]:hover:text-white' : ''}`}>
+                    <div className="mb-2 space-y-1">
                       {msg.files.map((file) => (
                         <FileAttachment key={file.id} file={file} />
                       ))}
                     </div>
                   )}
-                  <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : ''}`}>
+                  <div className="prose prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                   </div>
-                  {!isUser && (() => {
+                  {(() => {
                     const results = messageSearchResults[msg.id];
                     if (!results || results.length === 0) return null;
                     return (
@@ -203,7 +204,7 @@ export default function MessageList({
                         {results.map((r, i) => (
                           <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
                              className="block p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors border border-zinc-100 dark:border-zinc-700">
-                            <div className="text-xs font-medium text-brand-500 truncate">{r.title}</div>
+                            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 truncate">{r.title}</div>
                             <div className="text-[10px] text-zinc-400 mt-0.5">{new URL(r.url).hostname}</div>
                             <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{r.content}</div>
                           </a>
@@ -211,27 +212,14 @@ export default function MessageList({
                       </div>
                     );
                   })()}
-                </div>
-                <div className={`flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${isUser ? 'justify-end' : 'justify-start'}`}>
-                  {isUser && (
-                    <button onClick={() => onEdit(msg)} className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer" title="编辑">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button onClick={() => handleCopy(msg.content)} className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer" title="复制">
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
-                  {!isUser && (
-                    <button onClick={() => onRegenerate(msg.id)} className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer" title="重新生成">
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button onClick={() => handleDeleteMsg(msg.id)} className="p-1 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer" title="删除">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex gap-3 mt-1 text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleCopy(msg.content)} className="hover:text-zinc-600 dark:hover:text-zinc-300">复制</button>
+                    <button onClick={() => onRegenerate(msg.id)} className="hover:text-zinc-600 dark:hover:text-zinc-300">重新生成</button>
+                    <button onClick={() => handleDeleteMsg(msg.id)} className="hover:text-zinc-600 dark:hover:text-zinc-300">删除</button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </>
         );
       }}
