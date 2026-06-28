@@ -6,9 +6,13 @@ import { Copy, Check } from 'lucide-react';
 interface Props {
   className?: string;
   children?: React.ReactNode;
+  inline?: boolean;
 }
 
-export default function CodeBlock({ className, children }: Props) {
+export default function CodeBlock({ className, children, inline }: Props) {
+  if (inline) {
+    return <code className={className}>{children}</code>;
+  }
   const [copied, setCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || '');
   const lang = match ? match[1] : '';
