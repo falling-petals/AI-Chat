@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useChatStore } from '../store';
-import { chatStream, regenerateStream, fileApi } from '../api/chat';
-import type { MessageVO, FileInfo, SearchResult } from '../types';
+import { useChatStream } from '../hooks/useChatStream';
+import { useFileUpload } from '../hooks/useFileUpload';
+import { useEditMessage } from '../hooks/useEditMessage';
+import type { MessageVO } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import StreamingMessage from './StreamingMessage';
@@ -15,196 +17,77 @@ export default function Chat() {
     conversations, currentConvId, messages,
     loadConversations, selectConversation, createConversation, deleteConversation,
     togglePin, toggleArchive,
-    setCurrentConvId, appendMessage, updateMessage, deleteMessage,
-    editingMessage, setEditingMessage,
+    setCurrentConvId, appendMessage, deleteMessage,
   } = useChatStore();
 
+  const { streaming, streamContent, thinkingContent, errorMessage, send, regenerate, stop } = useChatStream();
+  const { files: uploadedFiles, addFile, removeFile } = useFileUpload();
+  const { editingMessage, startEdit, cancelEdit, updateMessage } = useEditMessage();
+
   const [input, setInput] = useState('');
-  const [streaming, setStreaming] = useState(false);
-  const [streamContent, setStreamContent] = useState('');
-  const [thinkingContent, setThinkingContent] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
   const [searchEnabled, setSearchEnabled] = useState(false);
-  const pendingSourcesRef = useRef<SearchResult[] | null>(null);
-  const abortRef = useRef<(() => void) | null>(null);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
-
-  const startStream = useCallback(async (
-    streamFn: () => Promise<void>,
-  ) => {
-    setStreaming(true);
-    setStreamContent('');
-    setThinkingContent('');
-    setErrorMessage('');
-    try {
-      await streamFn();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '操作失败，请稍后重试';
-      setErrorMessage(message);
-      setStreaming(false);
-      setStreamContent('');
-      setThinkingContent('');
-    }
-  }, []);
-
-  const handleStop = useCallback(() => {
-    abortRef.current?.();
-    abortRef.current = null;
-    setStreaming(false);
-  }, []);
-
-  const handleUpload = useCallback(async (file: File) => {
-    try {
-      const info = await fileApi.upload(file);
-      setUploadedFiles((prev) => [...prev, info]);
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : '上传失败');
-    }
-  }, []);
-
-  const handleRemoveFile = useCallback((id: number) => {
-    setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
-  }, []);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || streaming) return;
 
     const text = input;
-    const fileIds = uploadedFiles.map((f) => f.id);
+    const fileIds = uploadedFiles.filter(f => !f.uploading).map(f => f.fileInfo.id);
     setInput('');
-    setUploadedFiles([]);
+    uploadedFiles.forEach(f => removeFile(f.fileInfo.id));
 
     if (editingMessage) {
-      await startStream(async () => {
-        await updateMessage(editingMessage.id, text);
-        setEditingMessage(null);
+      await updateMessage(editingMessage.id, text);
+      cancelEdit();
 
-        const allMessages = useChatStore.getState().messages;
-        const editIdx = allMessages.findIndex(m => m.id === editingMessage.id);
-        const nextAiMsg = allMessages.slice(editIdx + 1).find(m => m.role === 'assistant');
+      const allMessages = useChatStore.getState().messages;
+      const editIdx = allMessages.findIndex(m => m.id === editingMessage.id);
+      const nextAiMsg = allMessages.slice(editIdx + 1).find(m => m.role === 'assistant');
 
-        if (nextAiMsg) {
-          const { promise, abort } = regenerateStream(
-            nextAiMsg.id,
-            {
-              onMessage: (t) => setStreamContent((prev) => prev + t),
-              onThinking: (t) => setThinkingContent((prev) => prev + t),
-              onDone: async () => {
-                setStreaming(false);
-                setStreamContent('');
-                setThinkingContent('');
-                if (currentConvId) await selectConversation(currentConvId);
-              },
-              onError: (msg) => {
-                setErrorMessage(msg);
-                setStreaming(false);
-                setStreamContent('');
-                setThinkingContent('');
-              },
-              onFinally: () => setStreaming(false),
-            },
-          );
-          abortRef.current = abort;
-          await promise;
-        } else {
-          setStreaming(false);
-        }
-      });
+      if (nextAiMsg) {
+        await regenerate(nextAiMsg.id);
+      }
       return;
     }
 
-    await startStream(async () => {
-      let convId = currentConvId;
-      if (!convId) {
-        convId = await createConversation('');
-        setCurrentConvId(convId);
-      }
+    let convId = currentConvId;
+    if (!convId) {
+      convId = await createConversation('');
+      setCurrentConvId(convId);
+    }
 
-      appendMessage({
-        id: Date.now(),
-        conversationId: convId,
-        role: 'user',
-        content: text,
-        thinking: null,
-        createdAt: new Date().toISOString(),
-        files: uploadedFiles,
-      });
-
-      const { promise, abort } = chatStream(
-        convId, text,
-        {
-          onMessage: (t) => setStreamContent((prev) => prev + t),
-          onThinking: (t) => setThinkingContent((prev) => prev + t),
-          onSources: (sources) => { pendingSourcesRef.current = sources; },
-          onDone: async (messageId) => {
-            setStreaming(false);
-            if (messageId && pendingSourcesRef.current) {
-              useChatStore.getState().setMessageSearchResults(messageId, pendingSourcesRef.current);
-            }
-            pendingSourcesRef.current = null;
-            setStreamContent('');
-            setThinkingContent('');
-            await selectConversation(convId!);
-          },
-          onError: (msg) => {
-            setErrorMessage(msg);
-            setStreaming(false);
-            setStreamContent('');
-            setThinkingContent('');
-          },
-          onFinally: () => setStreaming(false),
-        },
-        fileIds,
-        searchEnabled,
-      );
-      abortRef.current = abort;
-      await promise;
+    appendMessage({
+      id: Date.now(),
+      conversationId: convId,
+      role: 'user',
+      content: text,
+      thinking: null,
+      createdAt: new Date().toISOString(),
+      files: uploadedFiles.filter(f => !f.uploading).map(f => f.fileInfo),
     });
-  }, [input, streaming, currentConvId, editingMessage, uploadedFiles, createConversation, selectConversation,
-      setCurrentConvId, appendMessage, updateMessage, setEditingMessage, startStream, searchEnabled]);
+
+    await send(convId, text, fileIds, searchEnabled);
+  }, [input, streaming, currentConvId, editingMessage, uploadedFiles, createConversation,
+      setCurrentConvId, appendMessage, updateMessage, cancelEdit, regenerate, send, searchEnabled, removeFile]);
 
   const handleEdit = useCallback((msg: MessageVO) => {
     setInput(msg.content);
-    setEditingMessage(msg);
-  }, [setEditingMessage]);
+    startEdit(msg);
+  }, [startEdit]);
 
   const handleCancelEdit = useCallback(() => {
     setInput('');
-    setEditingMessage(null);
-  }, [setEditingMessage]);
+    cancelEdit();
+  }, [cancelEdit]);
 
   const handleDelete = useCallback(async (id: number) => {
     await deleteMessage(id);
   }, [deleteMessage]);
 
   const handleRegenerate = useCallback(async (messageId: number) => {
-    await startStream(async () => {
-      const { promise, abort } = regenerateStream(
-        messageId,
-        {
-          onMessage: (t) => setStreamContent((prev) => prev + t),
-          onThinking: (t) => setThinkingContent((prev) => prev + t),
-          onDone: async () => {
-            setStreaming(false);
-            setStreamContent('');
-            setThinkingContent('');
-            if (currentConvId) await selectConversation(currentConvId);
-          },
-          onError: (msg) => {
-            setErrorMessage(msg);
-            setStreaming(false);
-            setStreamContent('');
-            setThinkingContent('');
-          },
-          onFinally: () => setStreaming(false),
-        },
-      );
-      abortRef.current = abort;
-      await promise;
-    });
-  }, [currentConvId, selectConversation, startStream]);
+    await regenerate(messageId);
+  }, [regenerate]);
 
   const setToken = useChatStore((s) => s.setToken);
 
@@ -217,8 +100,8 @@ export default function Chat() {
   const handleNewChat = () => {
     setCurrentConvId(null);
     setInput('');
-    setEditingMessage(null);
-    setUploadedFiles([]);
+    cancelEdit();
+    uploadedFiles.forEach(f => removeFile(f.fileInfo.id));
   };
 
   return (
@@ -260,22 +143,19 @@ export default function Chat() {
         )}
         <ChatInput
           value={input}
-          onChange={(value) => {
-            setInput(value);
-            if (errorMessage) setErrorMessage('');
-          }}
+          onChange={setInput}
           onSend={handleSend}
           onCancelEdit={handleCancelEdit}
           disabled={streaming}
           errorMessage={errorMessage}
           editing={!!editingMessage}
-          uploadedFiles={uploadedFiles}
-          onUpload={handleUpload}
-          onRemoveFile={handleRemoveFile}
+          uploadedFiles={uploadedFiles.map(f => f.fileInfo)}
+          onUpload={addFile}
+          onRemoveFile={removeFile}
           searchEnabled={searchEnabled}
           onToggleSearch={() => setSearchEnabled((prev) => !prev)}
           streaming={streaming}
-          onStop={handleStop}
+          onStop={stop}
         />
       </div>
     </div>
