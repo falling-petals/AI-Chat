@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bot } from 'lucide-react';
+import { Menu, Bot, PanelLeft } from 'lucide-react';
 import { useChatStore } from '../store';
 import { useChatStream } from '../hooks/useChatStream';
 import { useFileUpload } from '../hooks/useFileUpload';
@@ -27,6 +27,7 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleSelectConv = useCallback(async (id: number) => {
     await selectConversation(id);
@@ -125,7 +126,18 @@ export default function Chat() {
         onLogout={handleLogout}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          className="fixed left-3 top-3 z-50 p-2 bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+          title="展开侧边栏"
+        >
+          <PanelLeft className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+        </button>
+      )}
       <div className="flex-1 flex flex-col min-w-0">
         <button
           onClick={() => setSidebarOpen(true)}

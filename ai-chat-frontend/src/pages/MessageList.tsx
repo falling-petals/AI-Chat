@@ -3,7 +3,7 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Brain, File, FileText, FileSpreadsheet } from 'lucide-react';
+import { Sparkles, File, FileText, FileSpreadsheet, Pencil, Copy, Trash2, RefreshCw } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import StreamingMessage from './StreamingMessage';
 import type { MessageVO } from '../types';
@@ -137,8 +137,10 @@ export default function MessageList({
       itemContent={(index, item) => {
         if ('_stream' in item) {
           return (
-            <div className="px-7 py-2.5">
-              <StreamingMessage content={item.content} thinking={item.thinking} streaming={streaming} />
+            <div className="flex justify-center px-7 py-2.5">
+              <div className="max-w-2xl w-full">
+                <StreamingMessage content={item.content} thinking={item.thinking} streaming={streaming} />
+              </div>
             </div>
           );
         }
@@ -150,10 +152,10 @@ export default function MessageList({
           <>
             {showDateLabel && <DateDivider label={msg.dateLabel ?? '更早'} />}
             {msg.role === 'user' ? (
-              <div className="flex justify-end px-7 py-2.5 group">
-                <div className="max-w-3xl">
+              <div className="flex justify-center px-7 py-2.5">
+                <div className="max-w-2xl w-full">
                   {msg.files && msg.files.length > 0 && (
-                    <div className="mb-2 flex flex-wrap justify-end gap-1">
+                    <div className="mb-2 flex flex-wrap gap-1">
                       {msg.files.map((file) => (
                         <FileAttachment key={file.id} file={file} />
                       ))}
@@ -164,20 +166,26 @@ export default function MessageList({
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                     </div>
                   </div>
-                  <div className="flex gap-3 justify-end mt-1 text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => onEdit(msg)} className="hover:text-zinc-600 dark:hover:text-zinc-300">编辑</button>
-                    <button onClick={() => handleCopy(msg.content)} className="hover:text-zinc-600 dark:hover:text-zinc-300">复制</button>
-                    <button onClick={() => handleDeleteMsg(msg.id)} className="hover:text-zinc-600 dark:hover:text-zinc-300">删除</button>
+                  <div className="flex gap-1 mt-1 text-zinc-400">
+                    <button onClick={() => onEdit(msg)} title="编辑" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleCopy(msg.content)} title="复制" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDeleteMsg(msg.id)} title="删除" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex justify-start px-7 py-2.5 group">
-                <div className="max-w-3xl">
+              <div className="flex justify-center px-7 py-2.5">
+                <div className="max-w-2xl w-full">
                   {msg.thinking && (
                     <details className="mb-2">
                       <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
-                        <Brain className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3.5 h-3.5" />
                         Thought
                       </summary>
                       <div className="mt-2 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
@@ -216,10 +224,16 @@ export default function MessageList({
                       </div>
                     );
                   })()}
-                  <div className="flex gap-3 mt-1 text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => handleCopy(msg.content)} className="hover:text-zinc-600 dark:hover:text-zinc-300">复制</button>
-                    <button onClick={() => onRegenerate(msg.id)} className="hover:text-zinc-600 dark:hover:text-zinc-300">重新生成</button>
-                    <button onClick={() => handleDeleteMsg(msg.id)} className="hover:text-zinc-600 dark:hover:text-zinc-300">删除</button>
+                  <div className="flex gap-1 mt-1 text-zinc-400">
+                    <button onClick={() => handleCopy(msg.content)} title="复制" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => onRegenerate(msg.id)} title="重新生成" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDeleteMsg(msg.id)} title="删除" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
                   </div>
                 </div>
               </div>

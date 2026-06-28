@@ -1,4 +1,4 @@
-﻿import { Plus, Trash2, Pin, PinOff, Archive, ArchiveRestore, Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
+﻿import { Plus, Trash2, Pin, PinOff, Archive, ArchiveRestore, Settings, LogOut, ChevronDown, ChevronRight, User, PanelLeftClose } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { useState, useMemo } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
@@ -16,6 +16,8 @@ interface SidebarProps {
   onLogout: () => void;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -50,10 +52,12 @@ function groupConversations(convs: Conversation[]) {
   return groups;
 }
 
-export default function Sidebar({ conversations, currentConvId, onSelect, onDelete, onTogglePin, onToggleArchive, onNewChat, onSettings, onLogout, sidebarOpen, onToggleSidebar }: SidebarProps) {
+export default function Sidebar({ conversations, currentConvId, onSelect, onDelete, onTogglePin, onToggleArchive, onNewChat, onSettings, onLogout, sidebarOpen, onToggleSidebar, collapsed, onToggleCollapse }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const username = localStorage.getItem('username') || 'User';
 
   const matchesSearch = (c: Conversation) =>
     !debouncedSearch || (c.title || '').toLowerCase().includes(debouncedSearch.toLowerCase());
@@ -69,45 +73,41 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
       )}
       <aside className={`
         fixed md:relative z-40 h-full
-        w-60 flex-shrink-0
         bg-[#f8f8f9] dark:bg-[#0f0f0f]
         border-r border-zinc-200 dark:border-zinc-800
         flex flex-col
-        transition-transform duration-200
+        transition-all duration-200
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${collapsed && !sidebarOpen ? 'w-0 md:w-0 overflow-hidden border-r-0' : 'w-60'}
       `}>
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
           <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">AI Chat</span>
-          <div className="flex items-center gap-0.5">
-            <ThemeToggle />
-            <button onClick={onSettings} className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer" title="Settings">
-              <Settings className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+          {onToggleCollapse && (
+            <button onClick={onToggleCollapse} className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer" title="收起侧边栏">
+              <PanelLeftClose className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
             </button>
-            <button onClick={onLogout} className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer" title="Logout">
-              <LogOut className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
-            </button>
-          </div>
+          )}
         </div>
 
         <button
           onClick={onNewChat}
-          className="mx-3 mb-2 flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+          className="mx-3 mb-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           新对话
         </button>
 
-        <div className="mx-3 mb-2">
+        <div className="mx-3 mb-2 shrink-0">
           <input
             type="text"
             placeholder="搜索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent px-2 py-1 text-sm text-zinc-600 dark:text-zinc-400 placeholder-zinc-400 outline-none"
+            className="w-full bg-transparent px-2.5 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 placeholder-zinc-400 outline-none border border-zinc-200 dark:border-zinc-700 rounded-md"
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-0.5">
+        <div className="flex-1 overflow-y-auto space-y-0.5 min-h-0">
           {groups.map((group) => (
             <div key={group.label}>
               <div className="px-3 py-1 text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
@@ -201,6 +201,41 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                   </div>
                 </div>
               ))}
+            </>
+          )}
+        </div>
+
+        <div className="border-t border-zinc-200 dark:border-zinc-800 px-2 py-2 shrink-0 relative">
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+          >
+            <User className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0" />
+            <span className="text-sm text-zinc-600 dark:text-zinc-400 truncate">{username}</span>
+          </button>
+          {showUserMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+              <div className="absolute bottom-full left-2 right-2 mb-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 z-50">
+                <button
+                  onClick={() => { onSettings(); setShowUserMenu(false); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                >
+                  <Settings className="w-4 h-4" />
+                  模型提供商
+                </button>
+                <div className="flex items-center justify-between px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  <span>切换主题</span>
+                  <ThemeToggle />
+                </div>
+                <button
+                  onClick={() => { onLogout(); setShowUserMenu(false); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  退出登录
+                </button>
+              </div>
             </>
           )}
         </div>

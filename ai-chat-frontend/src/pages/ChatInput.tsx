@@ -88,7 +88,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             onPaste={handlePaste}
             placeholder={disabled ? 'AI is thinking...' : '输入消息...'}
             disabled={disabled}
-            className="w-full bg-transparent px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none resize-none"
+            className="w-full bg-transparent px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none resize-none"
             rows={1}
             style={{ maxHeight: '200px' }}
             onInput={(e) => {
@@ -103,19 +103,21 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
               <button
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={disabled}
-                className="p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
-                title="Attach file"
+                className="flex items-center gap-1 px-2 py-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+                title="上传文档"
               >
                 <Paperclip className="w-4 h-4" />
+                <span className="text-xs">上传文档</span>
               </button>
               <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} multiple />
               <button
                 onClick={onToggleSearch}
                 disabled={disabled}
-                className={`p-1.5 rounded transition-colors ${searchEnabled ? 'text-sky-500 bg-zinc-100 dark:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'} disabled:opacity-30`}
-                title="Web search"
+                className={`flex items-center gap-1 px-2 py-1.5 rounded transition-colors ${searchEnabled ? 'text-sky-500 bg-zinc-100 dark:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'} disabled:opacity-30`}
+                title="联网搜索"
               >
                 <Search className="w-4 h-4" />
+                <span className="text-xs">联网搜索</span>
               </button>
             </div>
             <button
