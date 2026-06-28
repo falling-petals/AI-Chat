@@ -168,16 +168,23 @@ function createSSEStream(
   options: SSEOptions,
 ): { promise: Promise<void>; abort: () => void } {
   const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 290000);
+
   const promise = readSSEStream(endpoint, body, options, controller.signal)
     .catch((err) => {
       if (err instanceof DOMException && err.name === 'AbortError') {
+        options.onError?.('请求超时，请重试');
         return;
       }
       throw err;
+    })
+    .finally(() => {
+      clearTimeout(timeoutId);
     });
+
   return {
     promise,
-    abort: () => controller.abort(),
+    abort: () => { clearTimeout(timeoutId); controller.abort(); },
   };
 }
 
