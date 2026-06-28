@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { FileInfo } from '../types';
 import { useChatStore } from '../store';
 
-interface UploadFileItem {
+export interface UploadFileItem {
   fileInfo: FileInfo;
   progress: number;
   uploading: boolean;

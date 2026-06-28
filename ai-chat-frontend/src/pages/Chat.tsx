@@ -21,7 +21,7 @@ export default function Chat() {
   } = useChatStore();
 
   const { streaming, streamContent, thinkingContent, errorMessage, send, regenerate, stop } = useChatStream();
-  const { files: uploadedFiles, addFile, removeFile } = useFileUpload();
+  const { files: uploadedFiles, addFiles, removeFile } = useFileUpload();
   const { editingMessage, startEdit, cancelEdit, updateMessage } = useEditMessage();
 
   const [input, setInput] = useState('');
@@ -149,8 +149,8 @@ export default function Chat() {
           disabled={streaming}
           errorMessage={errorMessage}
           editing={!!editingMessage}
-          uploadedFiles={uploadedFiles.map(f => f.fileInfo)}
-          onUpload={addFile}
+          uploadedFiles={uploadedFiles}
+          onUpload={addFiles}
           onRemoveFile={removeFile}
           searchEnabled={searchEnabled}
           onToggleSearch={() => setSearchEnabled((prev) => !prev)}

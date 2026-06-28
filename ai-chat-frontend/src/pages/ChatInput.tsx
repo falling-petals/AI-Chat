@@ -1,5 +1,5 @@
 import { Send, X, Paperclip, Search, Square } from 'lucide-react';
-import type { FileInfo } from '../types';
+import type { UploadFileItem } from '../hooks/useFileUpload';
 
 interface ChatInputProps {
   value: string;
@@ -9,8 +9,8 @@ interface ChatInputProps {
   disabled: boolean;
   errorMessage: string;
   editing?: boolean;
-  uploadedFiles: FileInfo[];
-  onUpload: (file: File) => Promise<void>;
+  uploadedFiles: UploadFileItem[];
+  onUpload: (files: FileList) => Promise<void>;
   onRemoveFile: (id: number) => void;
   searchEnabled: boolean;
   onToggleSearch: () => void;
@@ -26,7 +26,9 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
     e.preventDefault();
     const file = imageItem.getAsFile();
     if (file) {
-      await onUpload(new File([file], `pasted-image-${Date.now()}.png`, { type: file.type }));
+      const dt = new DataTransfer();
+      dt.items.add(new File([file], `pasted-image-${Date.now()}.png`, { type: file.type }));
+      await onUpload(dt.files);
     }
     const text = e.clipboardData.getData('text/plain');
     if (text) {
@@ -49,9 +51,9 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await onUpload(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await onUpload(files);
       e.target.value = '';
     }
   };
@@ -70,11 +72,17 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
         {uploadedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {uploadedFiles.map((f) => (
-              <div key={f.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#6366F1]/10 text-xs text-[#6366F1]">
-                <span className="max-w-[120px] truncate">{f.originalName}</span>
-                <button onClick={() => onRemoveFile(f.id)} className="p-0.5 hover:bg-[#6366F1]/20 rounded cursor-pointer">
-                  <X className="w-3 h-3" />
-                </button>
+              <div key={f.fileInfo.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#6366F1]/10 text-xs text-[#6366F1]">
+                <span className="max-w-[120px] truncate">{f.fileInfo.originalName}</span>
+                {f.uploading ? (
+                  <div className="w-16 h-1.5 bg-[#6366F1]/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#6366F1] rounded-full transition-all" style={{ width: `${f.progress}%` }} />
+                  </div>
+                ) : (
+                  <button onClick={() => onRemoveFile(f.fileInfo.id)} className="p-0.5 hover:bg-[#6366F1]/20 rounded cursor-pointer">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -93,7 +101,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           >
             <Paperclip className="w-5 h-5" />
           </button>
-          <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} />
+          <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} multiple />
           <button
             onClick={onToggleSearch}
             disabled={disabled}
