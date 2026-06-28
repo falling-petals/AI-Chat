@@ -209,7 +209,7 @@ export default function Chat() {
   const setToken = useChatStore((s) => s.setToken);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    useChatStore.getState().setToken(null);
     localStorage.removeItem('username');
     setToken(null);
     navigate('/login');

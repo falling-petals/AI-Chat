@@ -1,3 +1,4 @@
+import { useChatStore } from '../store';
 import request from './client';
 import type { Conversation, MessageVO, ModelConfig, FileInfo, SearchResult } from '../types';
 
@@ -49,7 +50,7 @@ export const fileApi = {
   upload: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    const token = localStorage.getItem('token');
+    const token = useChatStore.getState().token;
     return fetch('/api/files/upload', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
@@ -94,7 +95,7 @@ async function readSSEStream(
   signal?: AbortSignal,
 ): Promise<void> {
   const { onMessage, onThinking, onSources, onDone, onError, onFinally } = options;
-  const token = localStorage.getItem('token');
+  const token = useChatStore.getState().token;
 
   try {
     const res = await fetch(endpoint, {

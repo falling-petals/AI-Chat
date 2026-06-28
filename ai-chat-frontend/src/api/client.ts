@@ -1,7 +1,9 @@
+import { useChatStore } from '../store';
+
 const BASE_URL = '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('token');
+  const token = useChatStore.getState().token;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string>),
@@ -12,7 +14,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   const data = await res.json();
   if (res.status === 401) {
-    localStorage.removeItem('token');
+    useChatStore.getState().setToken(null);
     localStorage.removeItem('username');
     if (window.location.pathname !== '/login') {
       window.location.href = '/login';
