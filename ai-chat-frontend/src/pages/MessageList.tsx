@@ -137,7 +137,7 @@ export default function MessageList({
       itemContent={(index, item) => {
         if ('_stream' in item) {
           return (
-            <div className="px-4 py-2">
+            <div className="px-7 py-2.5">
               <StreamingMessage content={item.content} thinking={item.thinking} streaming={streaming} />
             </div>
           );
@@ -150,8 +150,8 @@ export default function MessageList({
           <>
             {showDateLabel && <DateDivider label={msg.dateLabel ?? '更早'} />}
             {msg.role === 'user' ? (
-              <div className="flex justify-end px-4 py-2 group">
-                <div className="max-w-3xl text-right">
+              <div className="flex justify-end px-7 py-2.5 group">
+                <div className="max-w-3xl">
                   {msg.files && msg.files.length > 0 && (
                     <div className="mb-2 flex flex-wrap justify-end gap-1">
                       {msg.files.map((file) => (
@@ -159,8 +159,10 @@ export default function MessageList({
                       ))}
                     </div>
                   )}
-                  <div className="prose prose-sm max-w-none text-left text-zinc-800 dark:text-zinc-200">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                  <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-lg px-4 py-2.5">
+                    <div className="prose prose-base max-w-none text-zinc-800 dark:text-zinc-200">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                    </div>
                   </div>
                   <div className="flex gap-3 justify-end mt-1 text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => onEdit(msg)} className="hover:text-zinc-600 dark:hover:text-zinc-300">编辑</button>
@@ -170,7 +172,7 @@ export default function MessageList({
                 </div>
               </div>
             ) : (
-              <div className="flex justify-start px-4 py-2 group">
+              <div className="flex justify-start px-7 py-2.5 group">
                 <div className="max-w-3xl">
                   {msg.thinking && (
                     <details className="mb-2">
@@ -179,7 +181,7 @@ export default function MessageList({
                         Thought
                       </summary>
                       <div className="mt-2 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
-                        <div className="prose prose-sm max-w-none">
+                        <div className="prose prose-base max-w-none">
                           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
                         </div>
                       </div>
@@ -192,8 +194,10 @@ export default function MessageList({
                       ))}
                     </div>
                   )}
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                  <div className="bg-white/60 dark:bg-[#212121] rounded-lg px-4 py-2.5">
+                    <div className="prose prose-base max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                    </div>
                   </div>
                   {(() => {
                     const results = messageSearchResults[msg.id];

@@ -14,7 +14,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
   if (!streaming && !content && !thinking) return null;
 
   return (
-    <div>
+    <div className="bg-white/60 dark:bg-[#212121] rounded-lg px-4 py-2.5">
       {thinking && (
         <details open className="mb-2">
           <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
@@ -27,7 +27,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
         </details>
       )}
       {content ? (
-        <div className="prose prose-sm max-w-none">
+        <div className="prose prose-base max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{content}</ReactMarkdown>
         </div>
       ) : streaming && !thinking && (
