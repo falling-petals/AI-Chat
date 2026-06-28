@@ -11,7 +11,7 @@ interface Props {
 export default function CodeBlock({ className, children }: Props) {
   const code = String(children);
   if (!className?.startsWith('language-') && !code.includes('\n')) {
-    return <code className={className}>{children}</code>;
+    return <code className={className}>{code.replace(/^`|`$/g, '')}</code>;
   }
   const [copied, setCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || '');
