@@ -107,14 +107,14 @@ export default function Settings() {
   };
 
   return (
-    <div className="h-screen bg-zinc-50 dark:bg-zinc-900 flex flex-col">
+    <div className="h-screen bg-white dark:bg-[#151515] flex flex-col">
       {/* Header */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
+      <div className="bg-white dark:bg-[#151515] border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <button onClick={() => navigate('/')} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer">
             <ArrowLeft className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
           </button>
-          <SettingsIcon className="w-5 h-5 text-brand-500" />
+          <SettingsIcon className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
           <h1 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">模型设置</h1>
         </div>
       </div>
@@ -123,8 +123,8 @@ export default function Settings() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto space-y-4">
           {/* Info card */}
-          <div className="flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700">
-            <Info className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <Info className="w-5 h-5 text-zinc-400 shrink-0 mt-0.5" />
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
               在这里配置你的 API Key 和模型。选择供应商后填写对应模型的名称和 API Key。
               OpenAI 用户也可填入兼容的 API 地址，如 <code className="text-xs bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded">https://api.deepseek.com</code>。
@@ -134,14 +134,14 @@ export default function Settings() {
 
           {/* Config list */}
           {configs.map((cfg) => (
-            <div key={cfg.id} className="bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-2xl p-4 hover:shadow-sm transition-shadow">
+            <div key={cfg.id} className="bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 hover:shadow-sm transition-shadow">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="px-2.5 py-0.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-medium rounded-lg">{cfg.provider}</span>
+                    <span className="px-2.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-medium rounded-md">{cfg.provider}</span>
                     <span className="font-medium text-zinc-800 dark:text-zinc-100">{cfg.modelName}</span>
                     {cfg.isActive && (
-                      <span className="px-2.5 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded-lg">当前使用</span>
+                      <span className="px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded-md">当前使用</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -164,7 +164,7 @@ export default function Settings() {
                     </button>
                   )}
                   <button onClick={() => handleEdit(cfg)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer" title="编辑">
-                    <Bookmark className="w-4 h-4 text-zinc-400 hover:text-brand-500" />
+                    <Bookmark className="w-4 h-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
                   </button>
                   <button onClick={() => handleDelete(cfg.id!)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer" title="删除">
                     <Trash2 className="w-4 h-4 text-zinc-400 hover:text-red-500" />
@@ -176,7 +176,7 @@ export default function Settings() {
 
           {/* Add button */}
           {!showForm && (
-            <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl text-zinc-500 dark:text-zinc-400 hover:border-brand-500 hover:text-brand-500 transition-colors text-sm cursor-pointer">
+            <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-500 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors text-sm cursor-pointer">
               <Plus className="w-4 h-4" />
               添加模型配置
             </button>
@@ -184,7 +184,7 @@ export default function Settings() {
 
           {/* Add/Edit form */}
           {showForm && (
-            <div className="bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-2xl p-5 space-y-4">
+            <div className="bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-4">
               <h3 className="font-medium text-zinc-800 dark:text-zinc-100">{editingId !== null ? '编辑模型配置' : '添加模型配置'}</h3>
 
               <div className="grid grid-cols-2 gap-4">
@@ -193,7 +193,7 @@ export default function Settings() {
                   <select
                     value={form.provider}
                     onChange={(e) => setForm(prev => ({ ...prev, provider: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-0 focus:border-zinc-300 dark:focus:border-zinc-600 transition-all"
                   >
                     {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -204,7 +204,7 @@ export default function Settings() {
                     value={form.modelName}
                     onChange={(e) => setForm(prev => ({ ...prev, modelName: e.target.value }))}
                     placeholder="如 qwen-plus"
-                    className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-0 focus:border-zinc-300 dark:focus:border-zinc-600 transition-all"
                   />
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function Settings() {
                   onChange={(e) => setForm(prev => ({ ...prev, apiKey: e.target.value }))}
                   placeholder="sk-..."
                   type="password"
-                  className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-0 focus:border-zinc-300 dark:focus:border-zinc-600 transition-all"
                 />
               </div>
 
@@ -226,18 +226,18 @@ export default function Settings() {
                   value={form.baseUrl}
                   onChange={(e) => setForm(prev => ({ ...prev, baseUrl: e.target.value }))}
                   placeholder="留空使用默认地址"
-                  className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-0 focus:border-zinc-300 dark:focus:border-zinc-600 transition-all"
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <button onClick={cancelForm} className="px-4 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-xl transition-colors cursor-pointer">
+                <button onClick={cancelForm} className="px-4 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer">
                   取消
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={loading || !form.modelName.trim() || !form.apiKey.trim()}
-                  className="px-4 py-2 text-sm bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  className="px-4 py-2 text-sm bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   {loading ? '保存中...' : editingId !== null ? '保存修改' : '添加'}
                 </button>
