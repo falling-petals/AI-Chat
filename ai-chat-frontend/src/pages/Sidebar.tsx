@@ -1,4 +1,5 @@
 import { MessageSquare, Plus, Trash2, Pin, PinOff, Archive, ArchiveRestore, Search, Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 import { useState } from 'react';
 import type { Conversation } from '../types';
 
@@ -25,19 +26,20 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
   const archived = conversations.filter((c) => c.archived && matchesSearch(c));
 
   return (
-    <div className="w-72 bg-white/70 backdrop-blur-xl border-r border-white/20 flex flex-col">
-      <div className="p-4 border-b border-gray-100">
+    <div className="w-72 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border-r border-white/20 dark:border-slate-700/50 flex flex-col">
+      <div className="p-4 border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-[#6366F1]" />
-            <span className="font-semibold text-[#1E1B4B]">AI Chat</span>
+            <span className="font-semibold text-[#1E1B4B] dark:text-slate-100">AI Chat</span>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={onSettings} className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Settings">
-              <Settings className="w-4 h-4 text-[#64748B]" />
+            <ThemeToggle />
+            <button onClick={onSettings} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer" title="Settings">
+              <Settings className="w-4 h-4 text-[#64748B] dark:text-slate-400" />
             </button>
-            <button onClick={onLogout} className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Logout">
-              <LogOut className="w-4 h-4 text-[#64748B]" />
+            <button onClick={onLogout} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer" title="Logout">
+              <LogOut className="w-4 h-4 text-[#64748B] dark:text-slate-400" />
             </button>
           </div>
         </div>
@@ -55,7 +57,7 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
             placeholder="搜索对话..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#1E1B4B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
+            className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-[#1E1B4B] dark:text-slate-100 placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
           />
         </div>
       </div>
@@ -68,7 +70,7 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
             className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
               currentConvId === conv.id
                 ? 'bg-[#6366F1]/10 text-[#6366F1]'
-                : 'hover:bg-gray-100 text-[#475569]'
+                : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-[#475569] dark:text-slate-400'
             }`}
           >
             {conv.pinned
@@ -83,8 +85,8 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                 title={conv.pinned ? '取消置顶' : '置顶'}
               >
                 {conv.pinned
-                  ? <PinOff className="w-3.5 h-3.5 text-[#64748B]" />
-                  : <Pin className="w-3.5 h-3.5 text-[#64748B]" />
+                  ? <PinOff className="w-3.5 h-3.5 text-[#64748B] dark:text-slate-400" />
+                  : <Pin className="w-3.5 h-3.5 text-[#64748B] dark:text-slate-400" />
                 }
               </button>
               <button
@@ -92,14 +94,14 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                 className="p-1 hover:bg-white rounded-lg cursor-pointer"
                 title="归档"
               >
-                <Archive className="w-3.5 h-3.5 text-[#64748B]" />
+                <Archive className="w-3.5 h-3.5 text-[#64748B] dark:text-slate-400" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
                 className="p-1 hover:bg-white rounded-lg cursor-pointer"
                 title="删除"
               >
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    <Trash2 className="w-3.5 h-3.5 text-red-400 dark:text-red-400" />
               </button>
             </div>
           </div>
@@ -107,10 +109,10 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
 
         {archived.length > 0 && (
           <>
-            <div className="pt-2 border-t border-gray-200">
+            <div className="pt-2 border-t border-gray-200 dark:border-slate-700">
               <button
                 onClick={() => setShowArchived(!showArchived)}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#64748B] hover:text-[#1E1B4B] hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#64748B] dark:text-slate-400 hover:text-[#1E1B4B] dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
               >
                 {showArchived ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 <Archive className="w-4 h-4" />
@@ -124,7 +126,7 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                 className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors opacity-70 hover:opacity-100 ${
                   currentConvId === conv.id
                     ? 'bg-[#6366F1]/10 text-[#6366F1]'
-                    : 'hover:bg-gray-100 text-[#94A3B8]'
+                    : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-[#94A3B8]'
                 }`}
               >
                 <Archive className="w-4 h-4 shrink-0" />
@@ -135,14 +137,14 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                     className="p-1 hover:bg-white rounded-lg cursor-pointer"
                     title="恢复"
                   >
-                    <ArchiveRestore className="w-3.5 h-3.5 text-[#64748B]" />
+                    <ArchiveRestore className="w-3.5 h-3.5 text-[#64748B] dark:text-slate-400" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
                     className="p-1 hover:bg-white rounded-lg cursor-pointer"
                     title="删除"
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    <Trash2 className="w-3.5 h-3.5 text-red-400 dark:text-red-400" />
                   </button>
                 </div>
               </div>

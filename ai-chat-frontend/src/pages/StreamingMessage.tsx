@@ -15,7 +15,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[70%] rounded-2xl bg-white/80 backdrop-blur-sm border border-white/20 overflow-hidden">
+      <div className="max-w-[70%] rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 overflow-hidden">
         {thinking && (
           <details open className="border-b border-white/10">
             <summary className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-[#6366F1] cursor-pointer select-none hover:bg-[#6366F1]/5 transition-colors">
@@ -23,12 +23,12 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
               {streaming && !content ? 'Thinking...' : 'Thought'}
             </summary>
             <div className="px-4 pb-3 pt-1 bg-[#6366F1]/[0.02]">
-              <p className="text-sm text-[#475569] whitespace-pre-wrap leading-relaxed">{thinking}</p>
+              <p className="text-sm text-[#475569] dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{thinking}</p>
             </div>
           </details>
         )}
         {content ? (
-          <div className="px-4 py-3 prose prose-sm max-w-none text-[#1E1B4B]">
+          <div className="px-4 py-3 prose prose-sm max-w-none text-[#1E1B4B] dark:text-slate-100">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{content}</ReactMarkdown>
           </div>
         ) : streaming && !thinking && (

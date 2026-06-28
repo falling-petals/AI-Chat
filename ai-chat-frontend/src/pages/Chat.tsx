@@ -222,7 +222,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex bg-[#F5F3FF]">
+    <div className="h-screen flex bg-[#F5F3FF] dark:bg-slate-900">
       <Sidebar
         conversations={conversations}
         currentConvId={currentConvId}
@@ -253,8 +253,8 @@ export default function Chat() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Sparkles className="w-12 h-12 text-[#6366F1]/30 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-[#1E1B4B] mb-2">Start a new conversation</h2>
-              <p className="text-[#64748B] text-sm">Type a message below to begin</p>
+              <h2 className="text-xl font-semibold text-[#1E1B4B] dark:text-slate-100 mb-2">Start a new conversation</h2>
+              <p className="text-[#64748B] dark:text-slate-400 text-sm">Type a message below to begin</p>
             </div>
           </div>
         )}

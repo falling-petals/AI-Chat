@@ -57,7 +57,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
   };
 
   return (
-    <div className="p-4 border-t border-white/20 bg-white/30 backdrop-blur-sm">
+    <div className="p-4 border-t border-white/20 dark:border-slate-700/50 bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto space-y-2">
         {editing && (
           <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#6366F1]/10 text-xs text-[#6366F1]">
@@ -80,7 +80,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           </div>
         )}
         {errorMessage && (
-          <div className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-600">
+          <div className="px-4 py-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400">
             {errorMessage}
           </div>
         )}
@@ -107,7 +107,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             <Search className="w-5 h-5" />
           </button>
           <textarea
-            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all resize-none"
+            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all resize-none"
             placeholder={disabled ? 'AI is thinking...' : 'Type a message...'}
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -119,7 +119,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           {streaming ? (
             <button
               onClick={onStop}
-              className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all cursor-pointer"
+              className="p-3 bg-red-500 dark:bg-red-600 text-white rounded-xl hover:bg-red-600 dark:hover:bg-red-700 transition-all cursor-pointer"
               title="Stop generating"
             >
               <Square className="w-5 h-5" />

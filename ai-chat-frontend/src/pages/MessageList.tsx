@@ -42,9 +42,9 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
     return (
       <a href={imgSrc || '#'} target="_blank" rel="noopener noreferrer" className="block my-2">
         {imgSrc ? (
-          <img src={imgSrc} alt={file.originalName} className="max-w-sm max-h-64 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition-opacity" loading="lazy" />
+          <img src={imgSrc} alt={file.originalName} className="max-w-sm max-h-64 rounded-lg object-cover border border-gray-200 dark:border-slate-700 hover:opacity-90 transition-opacity" loading="lazy" />
         ) : (
-          <div className="w-32 h-24 rounded-lg bg-gray-100 animate-pulse" />
+          <div className="w-32 h-24 rounded-lg bg-gray-100 dark:bg-slate-800 animate-pulse" />
         )}
       </a>
     );
@@ -62,7 +62,7 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
       href={`/api/files/${file.id}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 transition-colors"
+      className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-700 dark:text-slate-300 transition-colors"
     >
       <FileIcon className="w-4 h-4" />
       <span className="truncate max-w-[200px]">{file.originalName}</span>
@@ -114,7 +114,7 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
         <div key={group.label}>
           <div className="flex items-center gap-3 mb-3 mt-2">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium shrink-0">{group.label}</span>
+            <span className="text-xs text-gray-400 dark:text-slate-500 font-medium shrink-0">{group.label}</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
           {group.messages.map((msg) => (
@@ -122,7 +122,7 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
               <div className={`group relative max-w-[70%] px-4 py-3 rounded-2xl ${
                 msg.role === 'user'
                   ? 'bg-[#6366F1] text-white'
-                  : 'bg-white/80 backdrop-blur-sm border border-white/20 text-[#1E1B4B]'
+                  : 'bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 text-[#1E1B4B] dark:text-slate-100'
               }`}>
                 {msg.thinking && (
                   <details className="mb-2">
@@ -131,7 +131,7 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                       Thought
                     </summary>
                     <div className="mt-2 pl-3 border-l-2 border-[#6366F1]/20">
-                      <div className="prose prose-sm max-w-none text-[#475569]">
+                      <div className="prose prose-sm max-w-none text-[#475569] dark:text-slate-400">
                         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
                       </div>
                     </div>
@@ -151,13 +151,13 @@ export default function MessageList({ messages, onEdit, onDelete, onRegenerate }
                   const results = messageSearchResults[msg.id];
                   if (!results || results.length === 0) return null;
                   return (
-                    <div className="mt-3 space-y-2 border-t border-gray-100 pt-2">
-                      <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Sources</div>
+                    <div className="mt-3 space-y-2 border-t border-gray-100 dark:border-slate-700 pt-2">
+                      <div className="text-[10px] font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">Sources</div>
                       {results.map((r, i) => (
                         <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
-                           className="block p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100">
+                           className="block p-2 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors border border-gray-100 dark:border-slate-700">
                           <div className="text-xs font-medium text-[#6366F1] truncate">{r.title}</div>
-                          <div className="text-[10px] text-gray-400 mt-0.5">{new URL(r.url).hostname}</div>
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{new URL(r.url).hostname}</div>
                           <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{r.content}</div>
                         </a>
                       ))}
