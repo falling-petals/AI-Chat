@@ -109,3 +109,25 @@
   border-radius: 8px;
   margin: 0.75em 0;
 }
+
+@layer base {
+  :root {
+    --color-bg-primary: #F5F3FF;
+    --color-bg-card: rgba(255, 255, 255, 0.8);
+    --color-text-primary: #1E1B4B;
+    --color-text-secondary: #475569;
+    --color-border: rgba(255, 255, 255, 0.2);
+  }
+  .dark {
+    --color-bg-primary: #0F172A;
+    --color-bg-card: rgba(30, 41, 59, 0.8);
+    --color-text-primary: #F1F5F9;
+    --color-text-secondary: #94A3B8;
+    --color-border: rgba(255, 255, 255, 0.05);
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
