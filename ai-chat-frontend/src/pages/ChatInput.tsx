@@ -59,7 +59,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
   };
 
   return (
-    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4">
+    <div className="px-4 pb-3 pt-2">
       <div className="max-w-4xl mx-auto">
         <div className="rounded-[28px] border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-transparent focus-within:shadow-[0_0_0_2px_rgba(59,130,246,0.12)] transition-shadow duration-200">
           {uploadedFiles.length > 0 && (
