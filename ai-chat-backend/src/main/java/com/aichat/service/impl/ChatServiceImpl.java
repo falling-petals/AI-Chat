@@ -81,64 +81,74 @@ public class ChatServiceImpl implements ChatService {
 
     public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds, Boolean searchEnabled) {
         SseEmitter emitter = createEmitter(userId);
+        try {
+            Conversation conv = conversationService.getById(conversationId, userId);
+            if (conv == null) {
+                sendError(emitter, "Conversation not found");
+                return emitter;
+            }
 
-        Conversation conv = conversationService.getById(conversationId, userId);
-        if (conv == null) {
-            sendError(emitter, "Conversation not found");
+            Message userMsg = new Message();
+            userMsg.setConversationId(conversationId);
+            userMsg.setRole("user");
+            userMsg.setContent(content);
+            if (fileIds != null && !fileIds.isEmpty()) {
+                try {
+                    userMsg.setFileIds(objectMapper.writeValueAsString(fileIds));
+                } catch (JsonProcessingException ignored) {}
+            }
+            userMsg.setCreatedAt(LocalDateTime.now());
+            messageMapper.insert(userMsg);
+
+            streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt());
+            return emitter;
+        } catch (Exception e) {
+            log.error("Stream setup error for userId={}", userId, e);
+            sendError(emitter, "服务器内部错误");
             return emitter;
         }
-
-        Message userMsg = new Message();
-        userMsg.setConversationId(conversationId);
-        userMsg.setRole("user");
-        userMsg.setContent(content);
-        if (fileIds != null && !fileIds.isEmpty()) {
-            try {
-                userMsg.setFileIds(objectMapper.writeValueAsString(fileIds));
-            } catch (JsonProcessingException ignored) {}
-        }
-        userMsg.setCreatedAt(LocalDateTime.now());
-        messageMapper.insert(userMsg);
-
-        streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt());
-        return emitter;
     }
 
     public SseEmitter regenerate(Long userId, Long messageId) {
         SseEmitter emitter = createEmitter(userId);
+        try {
+            Message aiMsg = messageService.getById(messageId);
+            if (aiMsg == null || !"assistant".equals(aiMsg.getRole())) {
+                sendError(emitter, "消息不存在或无法重新生成");
+                return emitter;
+            }
 
-        Message aiMsg = messageService.getById(messageId);
-        if (aiMsg == null || !"assistant".equals(aiMsg.getRole())) {
-            sendError(emitter, "消息不存在或无法重新生成");
+            Conversation conv = conversationService.getById(aiMsg.getConversationId(), userId);
+            if (conv == null) {
+                sendError(emitter, "无权操作");
+                return emitter;
+            }
+
+            Message userMsg = messageService.getPreviousUserMessage(aiMsg.getConversationId(), aiMsg.getId());
+            if (userMsg == null) {
+                sendError(emitter, "未找到对应的用户消息");
+                return emitter;
+            }
+
+            // Delete all messages after the user message (clear old AI response and anything beyond)
+            messageService.deleteAfter(aiMsg.getConversationId(), userMsg.getId());
+
+            // Parse fileIds from the stored user message for regenerate
+            List<Long> fileIds = new ArrayList<>();
+            if (userMsg.getFileIds() != null && !userMsg.getFileIds().isBlank()) {
+                try {
+                    fileIds = objectMapper.readValue(userMsg.getFileIds(),
+                            new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
+                } catch (Exception ignored) {}
+            }
+
+            streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, false, userMsg.getCreatedAt());
+            return emitter;
+        } catch (Exception e) {
+            log.error("Regenerate setup error for userId={}", userId, e);
+            sendError(emitter, "服务器内部错误");
             return emitter;
         }
-
-        Conversation conv = conversationService.getById(aiMsg.getConversationId(), userId);
-        if (conv == null) {
-            sendError(emitter, "无权操作");
-            return emitter;
-        }
-
-        Message userMsg = messageService.getPreviousUserMessage(aiMsg.getConversationId(), aiMsg.getId());
-        if (userMsg == null) {
-            sendError(emitter, "未找到对应的用户消息");
-            return emitter;
-        }
-
-        // Delete all messages after the user message (clear old AI response and anything beyond)
-        messageService.deleteAfter(aiMsg.getConversationId(), userMsg.getId());
-
-        // Parse fileIds from the stored user message for regenerate
-        List<Long> fileIds = new ArrayList<>();
-        if (userMsg.getFileIds() != null && !userMsg.getFileIds().isBlank()) {
-            try {
-                fileIds = objectMapper.readValue(userMsg.getFileIds(),
-                        new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
-            } catch (Exception ignored) {}
-        }
-
-        streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, false, userMsg.getCreatedAt());
-        return emitter;
     }
 
     private SseEmitter createEmitter(Long userId) {
