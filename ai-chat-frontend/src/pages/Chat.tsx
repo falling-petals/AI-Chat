@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Sparkles } from 'lucide-react';
+import { Menu, Sparkles, Bot, ArrowRight } from 'lucide-react';
 import { useChatStore } from '../store';
 import { useChatStream } from '../hooks/useChatStream';
 import { useFileUpload } from '../hooks/useFileUpload';
@@ -9,6 +9,13 @@ import type { MessageVO } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
+
+const EXAMPLE_PROMPTS = [
+  'Explain quantum computing in simple terms',
+  'Write a Python function to sort a list',
+  'What is the meaning of life?',
+  'Summarize the theory of relativity',
+];
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -110,8 +117,12 @@ export default function Chat() {
     uploadedFiles.forEach(f => removeFile(f.fileInfo.id));
   };
 
+  const handleExampleClick = (prompt: string) => {
+    setInput(prompt);
+  };
+
   return (
-    <div className="h-screen flex bg-[#F5F3FF] dark:bg-slate-900">
+    <div className="h-screen flex bg-zinc-50 dark:bg-zinc-900">
       <Sidebar
         conversations={conversations}
         currentConvId={currentConvId}
@@ -125,15 +136,15 @@ export default function Chat() {
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden fixed top-3 left-3 z-30 p-2 bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer"
+        >
+          <Menu className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+        </button>
         {currentConvId ? (
           <>
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden fixed top-3 left-3 z-30 p-2 bg-white/80 dark:bg-slate-800/80 rounded-lg shadow cursor-pointer"
-            >
-              <Menu className="w-5 h-5 text-[#475569] dark:text-slate-400" />
-            </button>
             <MessageList
               messages={messages}
               streaming={streaming}
@@ -145,11 +156,25 @@ export default function Chat() {
             />
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <Sparkles className="w-12 h-12 text-[#6366F1]/30 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-[#1E1B4B] dark:text-slate-100 mb-2">Start a new conversation</h2>
-              <p className="text-[#64748B] dark:text-slate-400 text-sm">Type a message below to begin</p>
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center max-w-md">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
+                <Bot className="w-8 h-8 text-brand-500" />
+              </div>
+              <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100 mb-2">How can I help you?</h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8">Choose a prompt to get started, or type your own</p>
+              <div className="grid grid-cols-2 gap-3">
+                {EXAMPLE_PROMPTS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handleExampleClick(p)}
+                    className="group text-left p-4 rounded-2xl bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-brand-500/50 hover:shadow-sm transition-all cursor-pointer"
+                  >
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed line-clamp-3">{p}</p>
+                    <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-brand-500 mt-2 transition-colors" />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

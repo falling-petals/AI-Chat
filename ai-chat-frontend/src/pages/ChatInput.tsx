@@ -59,12 +59,12 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
   };
 
   return (
-    <div className="p-4 border-t border-white/20 dark:border-slate-700/50 bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm">
+    <div className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3">
       <div className="max-w-4xl mx-auto space-y-2">
         {editing && (
-          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#6366F1]/10 text-xs text-[#6366F1]">
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-500/10 text-xs text-brand-600 dark:text-brand-400">
             <span>Editing message</span>
-            <button onClick={onCancelEdit} className="p-0.5 hover:bg-[#6366F1]/20 rounded cursor-pointer">
+            <button onClick={onCancelEdit} className="p-0.5 hover:bg-brand-500/20 rounded cursor-pointer">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -72,14 +72,14 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
         {uploadedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {uploadedFiles.map((f) => (
-              <div key={f.fileInfo.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#6366F1]/10 text-xs text-[#6366F1]">
+              <div key={f.fileInfo.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-brand-500/10 text-xs text-brand-600 dark:text-brand-400">
                 <span className="max-w-[120px] truncate">{f.fileInfo.originalName}</span>
                 {f.uploading ? (
-                  <div className="w-16 h-1.5 bg-[#6366F1]/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#6366F1] rounded-full transition-all" style={{ width: `${f.progress}%` }} />
+                  <div className="w-16 h-1.5 bg-brand-500/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${f.progress}%` }} />
                   </div>
                 ) : (
-                  <button onClick={() => onRemoveFile(f.fileInfo.id)} className="p-0.5 hover:bg-[#6366F1]/20 rounded cursor-pointer">
+                  <button onClick={() => onRemoveFile(f.fileInfo.id)} className="p-0.5 hover:bg-brand-500/20 rounded cursor-pointer">
                     <X className="w-3 h-3" />
                   </button>
                 )}
@@ -87,16 +87,11 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             ))}
           </div>
         )}
-        {errorMessage && (
-          <div className="px-4 py-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-sm text-red-600 dark:text-red-400">
-            {errorMessage}
-          </div>
-        )}
-        <div className="flex items-start gap-2">
+        <div className="flex items-end gap-2 bg-zinc-100 dark:bg-zinc-800 rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-brand-500/30 focus-within:bg-white dark:focus-within:bg-zinc-800 transition-all">
           <button
             onClick={() => document.getElementById('file-upload')?.click()}
             disabled={disabled}
-            className="p-3 text-[#6366F1]/60 hover:text-[#6366F1] hover:bg-[#6366F1]/5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
             title="Attach file"
           >
             <Paperclip className="w-5 h-5" />
@@ -105,40 +100,46 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           <button
             onClick={onToggleSearch}
             disabled={disabled}
-            className={`p-3 rounded-xl transition-all cursor-pointer ${
+            className={`p-1.5 rounded-lg transition-all cursor-pointer shrink-0 ${
               searchEnabled
-                ? 'bg-[#6366F1] text-white shadow-sm'
-                : 'text-[#6366F1]/60 hover:text-[#6366F1] hover:bg-[#6366F1]/5'
+                ? 'bg-brand-500 text-white'
+                : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Web search"
           >
             <Search className="w-5 h-5" />
           </button>
           <textarea
-            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all resize-none"
+            className="flex-1 px-1 py-1.5 bg-transparent text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none resize-none text-sm leading-relaxed"
             placeholder={disabled ? 'AI is thinking...' : 'Type a message...'}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             disabled={disabled}
-            rows={Math.min(value.split('\n').length, 8)}
+            rows={1}
+            style={{ maxHeight: '200px' }}
+            onInput={(e) => {
+              const el = e.currentTarget;
+              el.style.height = 'auto';
+              el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+            }}
           />
           {streaming ? (
             <button
               onClick={onStop}
-              className="p-3 bg-red-500 dark:bg-red-600 text-white rounded-xl hover:bg-red-600 dark:hover:bg-red-700 transition-all cursor-pointer"
+              className="p-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all cursor-pointer shrink-0"
               title="Stop generating"
             >
-              <Square className="w-5 h-5" />
+              <Square className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={onSend}
               disabled={disabled || !value.trim()}
-              className="p-3 bg-[#6366F1] text-white rounded-xl hover:bg-[#4F46E5] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="p-2.5 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4" />
             </button>
           )}
         </div>

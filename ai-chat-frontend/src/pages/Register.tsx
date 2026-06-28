@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api/auth';
-import { MessageSquare } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Register() {
@@ -21,27 +21,32 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-900 dark:to-slate-800">
-      <div className="w-full max-w-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/20 dark:border-slate-700/50">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <MessageSquare className="w-8 h-8 text-[#6366F1]" />
-          <h1 className="text-2xl font-bold text-[#1E1B4B] dark:text-slate-100">Create Account</h1>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+      <div className="w-full max-w-sm mx-4">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-brand-500 flex items-center justify-center">
+            <Bot className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Create account</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Get started with AI Chat</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#475569] dark:text-slate-400 mb-1">Username</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Username</label>
             <input
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all placeholder:text-zinc-400"
+              placeholder="Choose a username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#475569] dark:text-slate-400 mb-1">Password</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Password</label>
             <input
               type="password"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/30 focus:border-[#6366F1] transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all placeholder:text-zinc-400"
+              placeholder="Choose a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -49,14 +54,14 @@ export default function Register() {
           </div>
           <button
             type="submit"
-            className="w-full py-2.5 bg-[#6366F1] text-white rounded-xl font-medium hover:bg-[#4F46E5] transition-colors cursor-pointer"
+            className="w-full py-2.5 bg-brand-500 text-white rounded-xl font-medium hover:bg-brand-600 transition-colors cursor-pointer"
           >
-            Sign Up
+            Create Account
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-[#64748B] dark:text-slate-400">
+        <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#6366F1] hover:underline">Sign in</Link>
+          <Link to="/login" className="text-brand-500 hover:text-brand-600 font-medium">Sign in</Link>
         </p>
       </div>
     </div>
