@@ -105,6 +105,9 @@ public class ChatServiceImpl implements ChatService {
             userMsg.setCreatedAt(LocalDateTime.now());
             messageMapper.insert(userMsg);
 
+            conv.setUpdatedAt(LocalDateTime.now());
+            conversationService.update(userId, conv);
+
             streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt());
             return emitter;
         } catch (Exception e) {
@@ -137,6 +140,9 @@ public class ChatServiceImpl implements ChatService {
 
             // Delete all messages after the user message (clear old AI response and anything beyond)
             messageService.deleteAfter(aiMsg.getConversationId(), userMsg.getId());
+
+            conv.setUpdatedAt(LocalDateTime.now());
+            conversationService.update(userId, conv);
 
             // Parse fileIds from the stored user message for regenerate
             List<Long> fileIds = new ArrayList<>();

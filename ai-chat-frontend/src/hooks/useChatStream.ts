@@ -40,6 +40,7 @@ export function useChatStream() {
     setStreaming(false);
     setStreamContent('');
     setThinkingContent('');
+    await useChatStore.getState().loadConversations();
   }, [selectConversation]);
 
   const startStreamInternal = useCallback(async (streamFn: () => Promise<void>) => {
