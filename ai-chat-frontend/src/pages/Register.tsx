@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api/auth';
-import { Bot } from 'lucide-react';
+
 import { toast } from 'sonner';
 
 export default function Register() {
@@ -24,9 +24,7 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#151515]">
       <div className="w-full max-w-sm mx-4">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-            <Bot className="w-7 h-7 text-zinc-500 dark:text-zinc-400" />
-          </div>
+          <img src="/logo.svg" alt="AI Chat" className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Create account</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Get started with AI Chat</p>
         </div>

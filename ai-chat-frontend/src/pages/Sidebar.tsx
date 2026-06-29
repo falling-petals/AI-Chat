@@ -85,7 +85,10 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
         ${collapsed && !sidebarOpen ? 'w-0 md:w-0 overflow-hidden border-r-0' : 'w-60'}
       `}>
         <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-          <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">AI Chat</span>
+          <span className="flex items-center gap-2 font-semibold text-sm text-zinc-800 dark:text-zinc-100">
+            <img src="/logo.svg" alt="" className="w-5 h-5" />
+            AI Chat
+          </span>
           {onToggleCollapse && (
             <button onClick={onToggleCollapse} className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer" title="收起侧边栏">
               <PanelLeftClose className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />

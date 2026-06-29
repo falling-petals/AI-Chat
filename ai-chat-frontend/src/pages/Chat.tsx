@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bot, PanelLeft } from 'lucide-react';
+import { Menu, PanelLeft } from 'lucide-react';
 import { useChatStore } from '../store';
 import { useChatStream } from '../hooks/useChatStream';
 import { useFileUpload } from '../hooks/useFileUpload';
@@ -8,6 +8,28 @@ import { useEditMessage } from '../hooks/useEditMessage';
 import { modelApi } from '../api/chat';
 import type { MessageVO, ModelInfo } from '../types';
 import Sidebar from './Sidebar';
+
+function getDateLabel(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const diffDays = Math.floor((today.getTime() - msgDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return '今天';
+  if (diffDays === 1) return '昨天';
+
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+  if (msgDate >= monday) {
+    return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+  }
+
+  return '更早';
+}
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 
@@ -91,13 +113,15 @@ export default function Chat() {
       setCurrentConvId(convId);
     }
 
+    const nowISO = new Date().toISOString();
     appendMessage({
       id: Date.now(),
       conversationId: convId,
       role: 'user',
       content: text,
       thinking: null,
-      createdAt: new Date().toISOString(),
+      createdAt: nowISO,
+      dateLabel: getDateLabel(nowISO),
       files: uploadedFiles.filter(f => !f.uploading).map(f => f.fileInfo),
     });
 
@@ -186,7 +210,7 @@ export default function Chat() {
             />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
-            <Bot className="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
+            <img src="/logo.svg" alt="AI Chat" className="w-12 h-12 opacity-60" />
             <h1 className="text-lg font-medium text-zinc-600 dark:text-zinc-400">
               How can I help you today?
             </h1>
