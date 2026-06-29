@@ -44,7 +44,7 @@ export default function CodeBlock({ className, children }: Props) {
         customStyle={{
           borderRadius: 10,
           padding: '1rem 1.25rem',
-          fontSize: '0.8125rem',
+          fontSize: '0.9375rem',
           margin: '0.75em 0',
         }}
       >

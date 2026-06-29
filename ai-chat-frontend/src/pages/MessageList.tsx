@@ -153,7 +153,7 @@ export default function MessageList({
                     </div>
                   )}
                   <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-2 w-fit max-w-full">
-                    <div className="prose prose-base max-w-none text-zinc-800 dark:text-zinc-200">
+                    <div className="prose prose-base max-w-none">
                       <Streamdown components={{ code: CodeBlock }}>{msg.content}</Streamdown>
                     </div>
                   </div>
