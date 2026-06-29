@@ -28,7 +28,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
       )}
       {content ? (
         <div className="prose prose-base max-w-none">
-          <Streamdown animated isAnimating={streaming} components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{content}</Streamdown>
+          <Streamdown animated={{ animation: "gradientIn", duration: 200, stagger: 20 }} isAnimating={streaming} components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{content}</Streamdown>
         </div>
       ) : streaming && !thinking && (
         <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-300">

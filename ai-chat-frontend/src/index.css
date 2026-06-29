@@ -31,24 +31,18 @@
 ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
 .dark ::-webkit-scrollbar-thumb { background: #52525b; }
 
-/* Streamdown animation keyframes (styles.css not available in v2.5.0 package) */
-@keyframes sd-fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes sd-blurIn {
-  from { opacity: 0; filter: blur(4px); }
-  to { opacity: 1; filter: blur(0); }
-}
-
-@keyframes sd-slideUp {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Streamdown 渐变动画（品牌蓝 → 正常色，类似 Copilot 官网效果） */
+@keyframes sd-gradientIn {
+  from { color: #4469FC; opacity: 0.85; }
+  to   { color: inherit; opacity: 1; }
 }
 
 [data-sd-animate] {
-  animation: var(--sd-animation, sd-fadeIn) var(--sd-duration, 150ms) var(--sd-easing, ease) both;
+  animation: var(--sd-animation, sd-gradientIn) var(--sd-duration, 200ms) var(--sd-easing, ease) var(--sd-delay, 0ms) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sd-animate] { animation: none !important; opacity: 1 !important; }
 }
 
 /* Dark mode: force prose text to white for max contrast */
