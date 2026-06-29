@@ -142,7 +142,7 @@ public class ChatServiceImpl implements ChatService {
                 } catch (JsonProcessingException ignored) {}
             }
             userMsg.setSearchEnabled(searchEnabled != null && searchEnabled);
-            userMsg.setCreatedAt(LocalDateTime.now());
+            userMsg.setCreatedAt(LocalDateTime.now().withNano(0));
             messageMapper.insert(userMsg);
 
             conv.setUpdatedAt(LocalDateTime.now());
