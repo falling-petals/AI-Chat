@@ -1,6 +1,5 @@
 import { Streamdown } from 'streamdown';
 import { Sparkles } from 'lucide-react';
-import { useSmoothReveal } from '../hooks/useSmoothReveal';
 import CodeBlock from '../components/CodeBlock';
 
 interface StreamingMessageProps {
@@ -10,7 +9,6 @@ interface StreamingMessageProps {
 }
 
 export default function StreamingMessage({ content, thinking, streaming }: StreamingMessageProps) {
-  const displayContent = useSmoothReveal(content, streaming);
   if (!streaming && !content && !thinking) return null;
 
   return (
@@ -30,7 +28,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
       )}
       {content ? (
         <div className="stream-content prose prose-base max-w-none">
-          <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{displayContent}</Streamdown>
+          <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }} mode="streaming" animated isAnimating={streaming}>{content}</Streamdown>
         </div>
       ) : streaming && !thinking && (
         <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-300">
