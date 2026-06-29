@@ -121,6 +121,27 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           )}
           <div className="flex items-center justify-between px-2 pb-2">
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => document.getElementById('file-upload')?.click()}
+                disabled={disabled}
+                className="flex items-center gap-1 px-2 py-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+                title="上传文档"
+              >
+                <Paperclip className="w-4 h-4" />
+                <span className="text-xs">上传文档</span>
+              </button>
+              <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} multiple />
+              <button
+                onClick={onToggleSearch}
+                disabled={disabled}
+                className={`flex items-center gap-1 px-2 py-1.5 rounded transition-colors ${searchEnabled ? 'text-sky-500 bg-zinc-100 dark:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'} disabled:opacity-30`}
+                title="联网搜索"
+              >
+                <Search className="w-4 h-4" />
+                <span className="text-xs">联网搜索</span>
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
               {availableModels.length > 0 && selectedModel && (
                 <div className="relative" ref={modelRef}>
                   <button
@@ -128,11 +149,15 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
                     disabled={streaming}
                     className="flex items-center gap-1 px-2 py-1.5 rounded text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
                   >
-                    <span className="max-w-24 truncate">{selectedModel.name}</span>
-                    <ChevronDown className="w-3 h-3" />
+                    <span className="max-w-20 truncate">{selectedModel.name}</span>
+                    {(() => {
+                      const cur = availableModels.find(m => m.provider === selectedModel.provider && m.modelName === selectedModel.name);
+                      return cur?.isDefault ? <span className="text-[10px] text-zinc-400 ml-0.5">默认</span> : null;
+                    })()}
+                    <ChevronDown className="w-3 h-3 ml-0.5" />
                   </button>
                   {modelPickerOpen && (
-                    <div className="absolute bottom-full left-0 mb-1 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 z-50 max-h-60 overflow-y-auto">
+                    <div className="absolute bottom-full right-0 mb-1 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 z-50 max-h-60 overflow-y-auto">
                       {availableModels.map((m, i) => (
                         <button
                           key={m.configId ?? `default-${i}`}
@@ -156,33 +181,14 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
                 </div>
               )}
               <button
-                onClick={() => document.getElementById('file-upload')?.click()}
-                disabled={disabled}
-                className="flex items-center gap-1 px-2 py-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
-                title="上传文档"
+                onClick={streaming ? onStop : onSend}
+                disabled={!value.trim() && !streaming}
+                className="p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+                title={streaming ? 'Stop generating' : 'Send'}
               >
-                <Paperclip className="w-4 h-4" />
-                <span className="text-xs">上传文档</span>
-              </button>
-              <input id="file-upload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileChange} disabled={disabled} multiple />
-              <button
-                onClick={onToggleSearch}
-                disabled={disabled}
-                className={`flex items-center gap-1 px-2 py-1.5 rounded transition-colors ${searchEnabled ? 'text-sky-500 bg-zinc-100 dark:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'} disabled:opacity-30`}
-                title="联网搜索"
-              >
-                <Search className="w-4 h-4" />
-                <span className="text-xs">联网搜索</span>
+                {streaming ? <Square className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
               </button>
             </div>
-            <button
-              onClick={streaming ? onStop : onSend}
-              disabled={!value.trim() && !streaming}
-              className="p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
-              title={streaming ? 'Stop generating' : 'Send'}
-            >
-              {streaming ? <Square className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
-            </button>
           </div>
         </div>
         <p className="text-center text-[10px] text-zinc-400 mt-2 select-none">内容由AI生成，可能不准确，请注意核实</p>
