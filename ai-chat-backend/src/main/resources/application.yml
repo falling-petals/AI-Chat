@@ -33,7 +33,7 @@ app:
   chat-context-size: 30
   default-model:
     provider: dashscope
-    model-name: qwen3.6-flash
+    model-name: qwen-plus
 
 tavily:
   api-key: placeholder
