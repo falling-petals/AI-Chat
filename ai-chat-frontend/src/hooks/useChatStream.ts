@@ -67,7 +67,10 @@ export function useChatStream() {
           if (messageId && pendingSourcesRef.current) {
             useChatStore.getState().setMessageSearchResults(messageId, pendingSourcesRef.current);
           }
-          await selectConversation(actualConvId);
+          const currentId = useChatStore.getState().currentConvId;
+          if (currentId === actualConvId) {
+            await selectConversation(actualConvId);
+          }
           await useChatStore.getState().loadConversations();
           setStreamContent('');
           setThinkingContent('');
