@@ -75,7 +75,7 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
       href={`/api/files/${file.id}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 px-3 py-2 my-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 transition-colors"
+      className="inline-flex items-center gap-2 px-3 py-1 my-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 transition-colors"
     >
       <FileIcon className="w-4 h-4" />
       <span className="truncate max-w-[200px]">{file.originalName}</span>
@@ -137,8 +137,8 @@ export default function MessageList({
       itemContent={(index, item) => {
         if ('_stream' in item) {
           return (
-            <div className="px-7 py-2.5">
-              <div className="max-w-2xl mr-auto">
+            <div className="flex justify-start px-7 py-1">
+              <div className="max-w-2xl">
                 <StreamingMessage content={item.content} thinking={item.thinking} streaming={streaming} />
               </div>
             </div>
@@ -152,8 +152,8 @@ export default function MessageList({
           <>
             {showDateLabel && <DateDivider label={msg.dateLabel ?? '更早'} />}
             {msg.role === 'user' ? (
-              <div className="px-7 py-2.5">
-                <div className="max-w-2xl ml-auto">
+              <div className="flex justify-end px-7 py-1">
+                <div className="max-w-2xl">
                   {msg.files && msg.files.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1">
                       {msg.files.map((file) => (
@@ -161,7 +161,7 @@ export default function MessageList({
                       ))}
                     </div>
                   )}
-                  <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-2.5">
+                  <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-1">
                     <div className="prose prose-base max-w-none text-zinc-800 dark:text-zinc-200">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                     </div>
@@ -180,8 +180,8 @@ export default function MessageList({
                 </div>
               </div>
             ) : (
-              <div className="px-7 py-2.5">
-                <div className="max-w-2xl mr-auto">
+              <div className="flex justify-start px-7 py-1">
+                <div className="max-w-2xl">
                   {msg.thinking && (
                     <details className="mb-2">
                       <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
@@ -202,7 +202,7 @@ export default function MessageList({
                       ))}
                     </div>
                   )}
-                  <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-2.5">
+                  <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-1">
                     <div className="prose prose-base max-w-none">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                     </div>
