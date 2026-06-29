@@ -9,12 +9,14 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.util.regex.Pattern;
+
 @Component("dashscope")
 public class DashScopeChatModelProvider implements ChatModelProvider {
 
-    private static final String[] MULTIMODAL_MODEL_PREFIXES = {
-        "qwen-vl", "qwen2.5-vl", "qwen2-vl", "qwen-audio"
-    };
+    private static final Pattern MULTIMODAL_MODEL = Pattern.compile(
+        "(?i)(-vl|omni|-audio|-asr|-live|qvq|^qwen3\\.\\d+-plus)"
+    );
 
     private final DashScopeChatModel defaultChatModel;
 
@@ -46,12 +48,8 @@ public class DashScopeChatModelProvider implements ChatModelProvider {
     }
 
     static boolean isMultiModal(String modelName) {
-        if (modelName == null || modelName.isBlank()) return false;
-        String lower = modelName.toLowerCase();
-        for (String prefix : MULTIMODAL_MODEL_PREFIXES) {
-            if (lower.startsWith(prefix)) return true;
-        }
-        return false;
+        return modelName != null && !modelName.isBlank()
+            && MULTIMODAL_MODEL.matcher(modelName).find();
     }
 
     private static String normalizeBaseUrl(String baseUrl) {
