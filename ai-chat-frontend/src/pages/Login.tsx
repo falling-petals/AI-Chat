@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 export default function Login() {
   const setToken = useChatStore((s) => s.setToken);
+  const setCurrentConvId = useChatStore((s) => s.setCurrentConvId);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,7 @@ export default function Login() {
       const res = await login(username, password);
       localStorage.setItem('username', res.username);
       setToken(res.token);
+      setCurrentConvId(null);
       navigate('/');
     } catch (err: any) {
       toast.error(err.message);

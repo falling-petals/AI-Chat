@@ -153,6 +153,7 @@ export default function Chat() {
   const handleLogout = () => {
     localStorage.removeItem('username');
     setToken(null);
+    setCurrentConvId(null);
     navigate('/login');
   };
 
