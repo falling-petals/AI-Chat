@@ -29,9 +29,6 @@ public class DashScopeChatModelProvider implements ChatModelProvider {
                 .withModel(config.getModelName())
                 .build();
 
-        // Enable multi-modal for image/file support
-        options.setMultiModel(true);
-
         DashScopeChatModel model = defaultChatModel.mutate()
                 .dashScopeApi(api)
                 .defaultOptions(options)
