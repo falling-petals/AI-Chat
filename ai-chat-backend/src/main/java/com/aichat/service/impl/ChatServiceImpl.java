@@ -56,24 +56,6 @@ public class ChatServiceImpl implements ChatService {
     private final TavilyService tavilyService;
     private final ObjectMapper objectMapper;
 
-    public ChatServiceImpl(Map<String, ChatModelProvider> providers,
-                            ModelConfigService modelConfigService,
-                            ConversationService conversationService,
-                            MessageService messageService,
-                            MessageMapper messageMapper,
-                            FileService fileService,
-                            TavilyService tavilyService,
-                            ObjectMapper objectMapper) {
-        this.providers = providers;
-        this.modelConfigService = modelConfigService;
-        this.conversationService = conversationService;
-        this.messageService = messageService;
-        this.messageMapper = messageMapper;
-        this.fileService = fileService;
-        this.tavilyService = tavilyService;
-        this.objectMapper = objectMapper;
-    }
-
     @Value("${app.file-extract-max-chars:50000}")
     private int maxExtractChars;
 
