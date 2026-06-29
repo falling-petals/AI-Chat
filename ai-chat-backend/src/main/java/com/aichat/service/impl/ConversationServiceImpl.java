@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -45,6 +46,15 @@ public class ConversationServiceImpl implements ConversationService {
         Conversation existing = getById(conversation.getId(), userId);
         if (existing != null) {
             conversationMapper.updateById(conversation);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void touch(Long userId, Long id) {
+        Conversation existing = getById(id, userId);
+        if (existing != null) {
+            existing.setUpdatedAt(LocalDateTime.now());
+            conversationMapper.updateById(existing);
         }
     }
 
