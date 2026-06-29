@@ -154,7 +154,7 @@ export default function MessageList({
                   )}
                   <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-2 w-fit max-w-full">
                     <div className="prose prose-base max-w-none">
-                      <Streamdown components={{ code: CodeBlock }}>{msg.content}</Streamdown>
+                      <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{msg.content}</Streamdown>
                     </div>
                   </div>
                   <div className="flex gap-1 mt-1 text-zinc-400">
@@ -183,7 +183,7 @@ export default function MessageList({
                       </summary>
                       <div className="mt-2 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
                         <div className="prose prose-base max-w-none">
-                          <Streamdown components={{ code: CodeBlock }}>{msg.thinking}</Streamdown>
+                          <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{msg.thinking}</Streamdown>
                         </div>
                       </div>
                     </details>
@@ -197,7 +197,7 @@ export default function MessageList({
                   )}
                   <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-2">
                     <div className="prose prose-base max-w-none">
-                      <Streamdown components={{ code: CodeBlock }}>{msg.content}</Streamdown>
+                      <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{msg.content}</Streamdown>
                     </div>
                   </div>
                   {(() => {

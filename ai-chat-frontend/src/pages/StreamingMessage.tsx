@@ -21,14 +21,14 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
           </summary>
           <div className="pb-2 pt-1 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
             <div className="prose prose-sm max-w-none text-zinc-500 dark:text-zinc-400">
-              <Streamdown components={{ code: CodeBlock }}>{thinking}</Streamdown>
+              <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{thinking}</Streamdown>
             </div>
           </div>
         </details>
       )}
       {content ? (
         <div className="prose prose-base max-w-none">
-          <Streamdown animated isAnimating={streaming} components={{ code: CodeBlock }}>{content}</Streamdown>
+          <Streamdown animated isAnimating={streaming} components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{content}</Streamdown>
         </div>
       ) : streaming && !thinking && (
         <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
