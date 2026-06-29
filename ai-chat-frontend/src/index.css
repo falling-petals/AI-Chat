@@ -50,3 +50,14 @@
 [data-sd-animate] {
   animation: var(--sd-animation, sd-fadeIn) var(--sd-duration, 150ms) var(--sd-easing, ease) both;
 }
+
+/* Dark mode: force prose text to white for max contrast */
+.dark .prose,
+.dark .prose-sm,
+.dark .prose-base {
+  --tw-prose-body: #ffffff;
+  --tw-prose-headings: #ffffff;
+  --tw-prose-bold: #ffffff;
+  --tw-prose-links: #60a5fa;
+  color: #ffffff;
+}
