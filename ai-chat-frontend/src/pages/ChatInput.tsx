@@ -97,6 +97,11 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             }}
           />
 
+          {errorMessage && (
+            <div className="px-3 pb-1">
+              <p className="text-xs text-red-500 break-words">{errorMessage}</p>
+            </div>
+          )}
           <div className="flex items-center justify-between px-2 pb-2">
             <div className="flex items-center gap-1">
               <button

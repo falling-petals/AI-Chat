@@ -109,6 +109,13 @@ async function readSSEStream(
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        useChatStore.getState().setToken(null);
+        localStorage.removeItem('username');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
       throw new Error(`请求失败（HTTP ${res.status}）`);
     }
 
@@ -126,7 +133,7 @@ async function readSSEStream(
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
+      const lines = buffer.replace(/\r\n/g, '\n').split('\n');
       buffer = lines.pop() || '';
 
       for (const line of lines) {

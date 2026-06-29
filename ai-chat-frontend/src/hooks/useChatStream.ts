@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { chatStream, regenerateStream } from '../api/chat';
 import { useChatStore } from '../store';
 import type { SearchResult } from '../types';
@@ -9,23 +9,34 @@ export function useChatStream() {
   const [thinkingContent, setThinkingContent] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const abortRef = useRef<(() => void) | null>(null);
+  const mountedRef = useRef(true);
   const selectConversation = useChatStore((s) => s.selectConversation);
   const createConversation = useChatStore((s) => s.createConversation);
   const setCurrentConvId = useChatStore((s) => s.setCurrentConvId);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.();
+      abortRef.current = null;
+    };
+  }, []);
 
   const stop = useCallback(async () => {
     abortRef.current?.();
     abortRef.current = null;
     const convId = useChatStore.getState().currentConvId;
-    if (convId) {
-      // 轮询等待后端保存 AI 回复（最多 15 秒）
+    if (convId && mountedRef.current) {
       const prevLen = useChatStore.getState().messages.length;
       for (let i = 0; i < 15; i++) {
         await new Promise((r) => setTimeout(r, 1000));
+        if (!mountedRef.current) return;
         await selectConversation(convId);
         if (useChatStore.getState().messages.length > prevLen) break;
       }
     }
+    if (!mountedRef.current) return;
     setStreaming(false);
     setStreamContent('');
     setThinkingContent('');

@@ -45,53 +45,79 @@ export const useChatStore = create<ChatStore>()(
       setTheme: (theme) => set({ theme }),
 
       loadConversations: async () => {
-        const list = await conversationApi.list();
-        set({ conversations: list });
+        try {
+          const list = await conversationApi.list();
+          set({ conversations: list });
+        } catch (e) {
+          console.error('加载对话列表失败', e);
+        }
       },
 
       selectConversation: async (id: number) => {
         set({ currentConvId: id, loading: true });
-        const messages = await messageApi.list(id);
-        set({ messages, loading: false });
+        try {
+          const messages = await messageApi.list(id);
+          set({ messages, loading: false });
+        } catch (e) {
+          console.error('加载消息失败', e);
+          set({ loading: false });
+        }
       },
 
       createConversation: async (title?: string) => {
-        const id = await conversationApi.create({ title: title || '' });
-        await get().loadConversations();
-        return id;
+        try {
+          const id = await conversationApi.create({ title: title || '' });
+          await get().loadConversations();
+          return id;
+        } catch (e) {
+          console.error('创建对话失败', e);
+          throw e;
+        }
       },
 
       deleteConversation: async (id: number) => {
-        await conversationApi.delete(id);
-        const { currentConvId } = get();
-        if (currentConvId === id) {
-          set({ currentConvId: null, messages: [] });
+        try {
+          await conversationApi.delete(id);
+          const { currentConvId } = get();
+          if (currentConvId === id) {
+            set({ currentConvId: null, messages: [] });
+          }
+          await get().loadConversations();
+        } catch (e) {
+          console.error('删除对话失败', e);
         }
-        await get().loadConversations();
       },
 
       togglePin: async (id: number) => {
-        await conversationApi.togglePin(id);
-        set((state) => {
-          const list = state.conversations.map((c) =>
-            c.id === id ? { ...c, pinned: !c.pinned } : c
-          );
-          list.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
-          return { conversations: list };
-        });
+        try {
+          await conversationApi.togglePin(id);
+          set((state) => {
+            const list = state.conversations.map((c) =>
+              c.id === id ? { ...c, pinned: !c.pinned } : c
+            );
+            list.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
+            return { conversations: list };
+          });
+        } catch (e) {
+          console.error('切换置顶失败', e);
+        }
       },
 
       toggleArchive: async (id: number) => {
-        await conversationApi.toggleArchive(id);
-        const { currentConvId } = get();
-        if (currentConvId === id) {
-          set({ currentConvId: null, messages: [] });
+        try {
+          await conversationApi.toggleArchive(id);
+          const { currentConvId } = get();
+          if (currentConvId === id) {
+            set({ currentConvId: null, messages: [] });
+          }
+          set((state) => ({
+            conversations: state.conversations.map((c) =>
+              c.id === id ? { ...c, archived: !c.archived } : c
+            ),
+          }));
+        } catch (e) {
+          console.error('切换归档失败', e);
         }
-        set((state) => ({
-          conversations: state.conversations.map((c) =>
-            c.id === id ? { ...c, archived: !c.archived } : c
-          ),
-        }));
       },
 
       setCurrentConvId: (id) => {
@@ -105,17 +131,25 @@ export const useChatStore = create<ChatStore>()(
       appendMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
 
       updateMessage: async (id: number, content: string) => {
-        await messageApi.update(id, content);
-        set((state) => ({
-          messages: state.messages.map((m) => (m.id === id ? { ...m, content } : m)),
-        }));
+        try {
+          await messageApi.update(id, content);
+          set((state) => ({
+            messages: state.messages.map((m) => (m.id === id ? { ...m, content } : m)),
+          }));
+        } catch (e) {
+          console.error('更新消息失败', e);
+        }
       },
 
       deleteMessage: async (id: number) => {
-        await messageApi.delete(id);
-        set((state) => ({
-          messages: state.messages.filter((m) => m.id !== id),
-        }));
+        try {
+          await messageApi.delete(id);
+          set((state) => ({
+            messages: state.messages.filter((m) => m.id !== id),
+          }));
+        } catch (e) {
+          console.error('删除消息失败', e);
+        }
       },
 
       setEditingMessage: (msg) => set({ editingMessage: msg }),

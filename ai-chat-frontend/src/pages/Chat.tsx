@@ -121,6 +121,7 @@ export default function Chat() {
   };
 
   const handleNewChat = () => {
+    stop();
     setCurrentConvId(null);
     setInput('');
     setSearchEnabled(false);
