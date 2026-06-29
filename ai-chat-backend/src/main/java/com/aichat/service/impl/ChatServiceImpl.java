@@ -71,11 +71,15 @@ public class ChatServiceImpl implements ChatService {
     @Value("${app.default-model.model-name:}")
     private String defaultModelName;
 
+    @Value("${app.default-model.base-url:}")
+    private String defaultModelBaseUrl;
+
     private ModelConfig buildDefaultModelConfig() {
         if (defaultModelProvider.isBlank() || defaultModelName.isBlank()) return null;
         ModelConfig config = new ModelConfig();
         config.setProvider(defaultModelProvider);
         config.setModelName(defaultModelName);
+        config.setBaseUrl(defaultModelBaseUrl);
         config.setApiKey(dashscopeApiKey);
         return config;
     }

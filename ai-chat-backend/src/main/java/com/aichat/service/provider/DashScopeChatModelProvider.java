@@ -9,14 +9,8 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.util.regex.Pattern;
-
 @Component("dashscope")
 public class DashScopeChatModelProvider implements ChatModelProvider {
-
-    private static final Pattern MULTIMODAL_MODEL = Pattern.compile(
-        "(?i)(qwen|omni|qvq)"
-    );
 
     private final DashScopeChatModel defaultChatModel;
 
@@ -35,21 +29,12 @@ public class DashScopeChatModelProvider implements ChatModelProvider {
                 .withModel(config.getModelName())
                 .build();
 
-        if (isMultiModal(config.getModelName())) {
-            options.setMultiModel(true);
-        }
-
         DashScopeChatModel model = defaultChatModel.mutate()
                 .dashScopeApi(api)
                 .defaultOptions(options)
                 .build();
 
         return model.stream(prompt);
-    }
-
-    static boolean isMultiModal(String modelName) {
-        return modelName != null && !modelName.isBlank()
-            && MULTIMODAL_MODEL.matcher(modelName).find();
     }
 
     private static String normalizeBaseUrl(String baseUrl) {
