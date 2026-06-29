@@ -161,7 +161,7 @@ export default function MessageList({
                       ))}
                     </div>
                   )}
-                  <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-1">
+                  <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-2 w-fit max-w-full">
                     <div className="prose prose-base max-w-none text-zinc-800 dark:text-zinc-200">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                     </div>
@@ -183,7 +183,7 @@ export default function MessageList({
               <div className="flex justify-start px-7 py-1">
                 <div className="max-w-2xl">
                   {msg.thinking && (
-                    <details className="mb-2">
+                    <details className="mb-2 pl-4">
                       <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
                         <Sparkles className="w-3.5 h-3.5" />
                         Thought
@@ -202,7 +202,7 @@ export default function MessageList({
                       ))}
                     </div>
                   )}
-                  <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-1">
+                  <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-2">
                     <div className="prose prose-base max-w-none">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                     </div>
@@ -224,7 +224,7 @@ export default function MessageList({
                       </div>
                     );
                   })()}
-                  <div className="flex gap-1 mt-1 text-zinc-400">
+                  <div className="flex gap-1 mt-1 pl-4 text-zinc-400">
                     <button onClick={() => handleCopy(msg.content)} title="复制" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                       <Copy className="w-3.5 h-3.5" />
                     </button>
