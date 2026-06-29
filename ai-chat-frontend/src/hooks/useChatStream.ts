@@ -26,22 +26,10 @@ export function useChatStream() {
   const stop = useCallback(async () => {
     abortRef.current?.();
     abortRef.current = null;
-    const convId = useChatStore.getState().currentConvId;
-    if (convId && mountedRef.current) {
-      const prevLen = useChatStore.getState().messages.length;
-      for (let i = 0; i < 15; i++) {
-        await new Promise((r) => setTimeout(r, 1000));
-        if (!mountedRef.current) return;
-        await selectConversation(convId);
-        if (useChatStore.getState().messages.length > prevLen) break;
-      }
-    }
-    if (!mountedRef.current) return;
     setStreaming(false);
-    setStreamContent('');
-    setThinkingContent('');
+    // 不断连 streamContent/thinkingContent — 用户应看到已生成的部分
     await useChatStore.getState().loadConversations();
-  }, [selectConversation]);
+  }, []);
 
   const startStreamInternal = useCallback(async (streamFn: () => Promise<void>) => {
     setStreaming(true);
