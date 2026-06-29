@@ -123,7 +123,7 @@ export default function MessageList({
         if ('_stream' in item) {
           return (
             <div className="flex justify-start px-4 md:px-7 py-1">
-              <div className="max-w-2xl min-w-0 w-full">
+              <div className="max-w-2xl min-w-0">
                 <StreamingMessage content={item.content} thinking={item.thinking} streaming={streaming} />
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function MessageList({
             {showDateLabel && <DateDivider label={msg.dateLabel ?? '更早'} />}
             {msg.role === 'user' ? (
               <div className="flex justify-end px-4 md:px-7 py-1">
-                <div className="max-w-2xl min-w-0 w-full">
+                <div className="max-w-2xl min-w-0">
                   {msg.files && msg.files.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1">
                       {msg.files.map((file) => (
@@ -174,7 +174,7 @@ export default function MessageList({
               </div>
             ) : (
               <div className="flex justify-start px-4 md:px-7 py-1">
-                <div className="max-w-2xl min-w-0 w-full">
+                <div className="max-w-2xl min-w-0">
                   {msg.thinking && (
                     <details className="mb-2 pl-4">
                       <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
