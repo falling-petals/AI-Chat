@@ -55,3 +55,13 @@
   --tw-prose-links: #60a5fa;
   color: #ffffff;
 }
+
+/* 流式内容平滑显现 */
+.stream-content {
+  animation: streamFadeIn 0.3s ease;
+}
+
+@keyframes streamFadeIn {
+  from { opacity: 0.85; }
+  to { opacity: 1; }
+}

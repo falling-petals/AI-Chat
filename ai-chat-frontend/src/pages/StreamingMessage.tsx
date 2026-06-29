@@ -29,7 +29,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
         </details>
       )}
       {content ? (
-        <div className="prose prose-base max-w-none">
+        <div className="stream-content prose prose-base max-w-none">
           <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{displayContent}</Streamdown>
         </div>
       ) : streaming && !thinking && (
