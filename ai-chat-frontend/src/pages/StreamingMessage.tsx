@@ -15,12 +15,12 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
     <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-2">
       {thinking && (
         <details open className="mb-2">
-          <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
+          <summary className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-300 cursor-pointer select-none hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
             <Sparkles className="w-3.5 h-3.5" />
             {streaming && !content ? 'Thinking...' : 'Thought'}
           </summary>
           <div className="pb-2 pt-1 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
-            <div className="prose prose-sm max-w-none text-zinc-500 dark:text-zinc-400">
+            <div className="prose prose-sm max-w-none">
               <Streamdown components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{thinking}</Streamdown>
             </div>
           </div>
@@ -31,7 +31,7 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
           <Streamdown animated isAnimating={streaming} components={{ code: CodeBlock }} controls={{ table: { fullscreen: false } }}>{content}</Streamdown>
         </div>
       ) : streaming && !thinking && (
-        <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-300">
           <Sparkles className="w-4 h-4" />
           <span className="text-sm">Thinking</span>
           <span className="typing-dot">.</span>

@@ -43,9 +43,9 @@ export default {
         },
         dark: {
           css: {
-            color: '#cbd5e1',
-            'h1, h2, h3, h4': { color: '#f1f5f9' },
-            strong: { color: '#f1f5f9' },
+            color: '#ffffff',
+            'h1, h2, h3, h4': { color: '#ffffff' },
+            strong: { color: '#ffffff' },
             a: { color: '#60a5fa', '&:hover': { color: '#93bbfd' } },
             code: { color: '#fb7185', backgroundColor: '#311b25' },
             blockquote: { color: '#94a3b8', borderLeftColor: '#334155' },
