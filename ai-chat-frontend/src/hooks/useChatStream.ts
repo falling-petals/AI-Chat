@@ -78,6 +78,7 @@ export function useChatStream() {
             useChatStore.getState().setMessageSearchResults(messageId, pendingSourcesRef.current);
           }
           await selectConversation(actualConvId);
+          await useChatStore.getState().loadConversations();
           setStreamContent('');
           setThinkingContent('');
         },
@@ -115,6 +116,7 @@ export function useChatStream() {
           setStreaming(false);
           const convId = useChatStore.getState().currentConvId;
           if (convId) await selectConversation(convId);
+          await useChatStore.getState().loadConversations();
           setStreamContent('');
           setThinkingContent('');
         },

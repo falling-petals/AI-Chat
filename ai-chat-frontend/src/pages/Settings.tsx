@@ -146,7 +146,7 @@ export default function Settings() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                     <Key className="w-3.5 h-3.5" />
-                    <span className="font-mono">
+                    <span className="font-mono truncate overflow-hidden max-w-[240px]" title={cfg.apiKey}>
                       {showKey[cfg.id!] ? cfg.apiKey : `${cfg.apiKey.slice(0, 8)}${'•'.repeat(Math.max(12, cfg.apiKey.length - 8))}`}
                     </span>
                     <button onClick={() => setShowKey(prev => ({ ...prev, [cfg.id!]: !prev[cfg.id!] }))} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded transition-colors cursor-pointer">

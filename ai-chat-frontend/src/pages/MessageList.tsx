@@ -1,5 +1,5 @@
-import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
-import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { Virtuoso } from 'react-virtuoso';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -98,8 +98,6 @@ export default function MessageList({
   onEdit, onDelete, onRegenerate,
 }: MessageListProps) {
   const messageSearchResults = useChatStore((s) => s.messageSearchResults);
-  const virtuosoRef = useRef<VirtuosoHandle>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
 
   const allItems = useMemo<ListItem[]>(() => {
     if (streaming || streamContent || thinkingContent) {
@@ -107,16 +105,6 @@ export default function MessageList({
     }
     return messages;
   }, [messages, streaming, streamContent, thinkingContent]);
-
-  useEffect(() => {
-    if (isAtBottom && virtuosoRef.current) {
-      virtuosoRef.current.scrollToIndex({ index: allItems.length - 1, behavior: 'smooth' });
-    }
-  }, [allItems.length, streamContent, isAtBottom]);
-
-  const atBottomStateChange = useCallback((atBottom: boolean) => {
-    setIsAtBottom(atBottom);
-  }, []);
 
   const handleCopy = async (content: string) => {
     try {
@@ -131,7 +119,6 @@ export default function MessageList({
 
   return (
     <Virtuoso
-      ref={virtuosoRef}
       className="flex-1"
       data={allItems}
       itemContent={(index, item) => {
@@ -146,6 +133,12 @@ export default function MessageList({
         }
         const msg = item;
         const prev = index > 0 ? allItems[index - 1] : undefined;
+        const userMsgs = messages.filter(m => m.role === 'user');
+        const aiMsgs = messages.filter(m => m.role === 'assistant');
+        const lastUserMsg = userMsgs[userMsgs.length - 1];
+        const lastAiMsg = aiMsgs[aiMsgs.length - 1];
+        const isLastUserMsg = msg.role === 'user' && lastUserMsg?.id === msg.id;
+        const isLastAiMsg = msg.role === 'assistant' && lastAiMsg?.id === msg.id;
         const prevMsg = prev && !('_stream' in prev) ? prev as MessageVO : undefined;
         const showDateLabel = index === 0 || msg.dateLabel !== prevMsg?.dateLabel;
         return (
@@ -167,9 +160,11 @@ export default function MessageList({
                     </div>
                   </div>
                   <div className="flex gap-1 mt-1 text-zinc-400">
+                    {isLastUserMsg && (
                     <button onClick={() => onEdit(msg)} title="编辑" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
+                    )}
                     <button onClick={() => handleCopy(msg.content)} title="复制" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -228,9 +223,11 @@ export default function MessageList({
                     <button onClick={() => handleCopy(msg.content)} title="复制" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                       <Copy className="w-3.5 h-3.5" />
                     </button>
+                    {isLastAiMsg && (
                     <button onClick={() => onRegenerate(msg.id)} title="重新生成" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                       <RefreshCw className="w-3.5 h-3.5" />
                     </button>
+                    )}
                     <button onClick={() => handleDeleteMsg(msg.id)} title="删除" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
                     </button>
@@ -241,7 +238,6 @@ export default function MessageList({
           </>
         );
       }}
-      atBottomStateChange={atBottomStateChange}
       followOutput="smooth"
     />
   );

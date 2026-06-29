@@ -92,7 +92,10 @@ export const useChatStore = create<ChatStore>()(
             const list = state.conversations.map((c) =>
               c.id === id ? { ...c, pinned: !c.pinned } : c
             );
-            list.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
+            list.sort((a, b) => {
+              if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
             return { conversations: list };
           });
         } catch (e) {

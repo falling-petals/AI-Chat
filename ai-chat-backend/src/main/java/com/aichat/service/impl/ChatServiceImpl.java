@@ -260,17 +260,19 @@ public class ChatServiceImpl implements ChatService {
             String partialContent = fullContent.toString();
             String partialThinking = fullThinking.toString();
             if (!partialContent.isBlank() || !partialThinking.isBlank()) {
-                if (!savedToDb.getAndSet(true)) {
-                    Message assistantMsg = new Message();
-                    assistantMsg.setConversationId(conv.getId());
-                    assistantMsg.setRole("assistant");
-                    assistantMsg.setContent(partialContent);
-                    if (!partialThinking.isBlank()) {
-                        assistantMsg.setThinking(partialThinking);
+                    if (!savedToDb.getAndSet(true)) {
+                        Message assistantMsg = new Message();
+                        assistantMsg.setConversationId(conv.getId());
+                        assistantMsg.setRole("assistant");
+                        assistantMsg.setContent(partialContent);
+                        if (!partialThinking.isBlank()) {
+                            assistantMsg.setThinking(partialThinking);
+                        }
+                        messageMapper.insert(assistantMsg);
+                        conv.setUpdatedAt(LocalDateTime.now());
+                        conversationService.update(userId, conv);
+                        log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
                     }
-                    messageMapper.insert(assistantMsg);
-                    log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
-                }
             }
         });
 
@@ -314,6 +316,8 @@ public class ChatServiceImpl implements ChatService {
                                     assistantMsg.setThinking(partialThinking);
                                 }
                                 messageMapper.insert(assistantMsg);
+                                conv.setUpdatedAt(LocalDateTime.now());
+                                conversationService.update(userId, conv);
                                 log.warn("流式异常，已保存部分 AI 回复 ({} 字符)", partialContent.length());
                             }
                         } else {
@@ -332,6 +336,8 @@ public class ChatServiceImpl implements ChatService {
                                 assistantMsg.setThinking(fullThinking.toString());
                             }
                             messageMapper.insert(assistantMsg);
+                            conv.setUpdatedAt(LocalDateTime.now());
+                            conversationService.update(userId, conv);
 
                             if (searchEnabled && !searchResults.isEmpty()) {
                                 try {
