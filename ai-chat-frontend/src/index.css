@@ -56,6 +56,10 @@
   color: #ffffff;
 }
 
+.dark .prose :is(h1, h2, h3, h4, h5, h6) {
+  color: #ffffff !important;
+}
+
 /* 流式内容平滑显现 */
 .stream-content {
   animation: streamFadeIn 0.3s ease;
