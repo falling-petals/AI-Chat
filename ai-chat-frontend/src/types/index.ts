@@ -8,8 +8,6 @@ export interface Conversation {
   id: number;
   userId: number;
   title: string | null;
-  modelProvider: string;
-  modelName: string;
   systemPrompt: string | null;
   pinned: boolean;
   archived: boolean;
@@ -35,7 +33,6 @@ export interface ModelConfig {
   modelName: string;
   apiKey: string;
   baseUrl: string | null;
-  isActive: boolean;
 }
 
 export interface FileInfo {

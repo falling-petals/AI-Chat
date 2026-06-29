@@ -12,5 +12,4 @@ public class ModelConfigRequest {
     @NotBlank
     private String apiKey;
     private String baseUrl;
-    private Boolean isActive;
 }

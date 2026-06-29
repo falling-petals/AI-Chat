@@ -11,6 +11,5 @@ public class ModelConfig {
     private String modelName;
     private String apiKey;
     private String baseUrl;
-    private Boolean isActive;
     private LocalDateTime createdAt;
 }

@@ -10,6 +10,4 @@ public interface ModelConfigService {
     void save(Long userId, ModelConfig config);
     void update(Long userId, ModelConfig config);
     void delete(Long userId, Long id);
-    void activate(Long userId, Long id);
-    ModelConfig getActive(Long userId);
 }

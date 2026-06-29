@@ -31,8 +31,6 @@ public class ConversationController {
         Long userId = (Long) request.getAttribute("userId");
         Conversation conv = new Conversation();
         conv.setTitle(req.getTitle());
-        conv.setModelProvider(req.getModelProvider());
-        conv.setModelName(req.getModelName());
         conv.setSystemPrompt(req.getSystemPrompt());
         Long id = conversationService.create(userId, conv);
         return Result.success(id);

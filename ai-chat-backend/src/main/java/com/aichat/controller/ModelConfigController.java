@@ -35,7 +35,6 @@ public class ModelConfigController {
         config.setModelName(req.getModelName());
         config.setApiKey(req.getApiKey());
         config.setBaseUrl(req.getBaseUrl());
-        config.setIsActive(req.getIsActive());
         modelConfigService.save(userId, config);
         return Result.success(null);
     }
@@ -49,15 +48,7 @@ public class ModelConfigController {
         config.setModelName(req.getModelName());
         config.setApiKey(req.getApiKey());
         config.setBaseUrl(req.getBaseUrl());
-        config.setIsActive(req.getIsActive());
         modelConfigService.update(userId, config);
-        return Result.success(null);
-    }
-
-    @PutMapping("/{id}/activate")
-    public Result<?> activate(HttpServletRequest request, @PathVariable Long id) {
-        Long userId = (Long) request.getAttribute("userId");
-        modelConfigService.activate(userId, id);
         return Result.success(null);
     }
 
