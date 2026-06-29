@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 public class DashScopeChatModelProvider implements ChatModelProvider {
 
     private static final Pattern MULTIMODAL_MODEL = Pattern.compile(
-        "(?i)(-vl|omni|-audio|-asr|-live|qvq|^qwen3\\.\\d+-plus)"
+        "(?i)(qwen|omni|qvq)"
     );
 
     private final DashScopeChatModel defaultChatModel;
