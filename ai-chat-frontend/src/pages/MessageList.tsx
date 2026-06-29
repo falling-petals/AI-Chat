@@ -1,8 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
+import { Streamdown } from 'streamdown';
 import { Sparkles, File, FileText, FileSpreadsheet, Pencil, Copy, Trash2, RefreshCw } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 import StreamingMessage from './StreamingMessage';
@@ -156,7 +154,7 @@ export default function MessageList({
                   )}
                   <div className="bg-[#ebf5ff] dark:bg-[#293652] rounded-xl px-4 py-2 w-fit max-w-full">
                     <div className="prose prose-base max-w-none text-zinc-800 dark:text-zinc-200">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                      <Streamdown components={{ code: CodeBlock }}>{msg.content}</Streamdown>
                     </div>
                   </div>
                   <div className="flex gap-1 mt-1 text-zinc-400">
@@ -185,7 +183,7 @@ export default function MessageList({
                       </summary>
                       <div className="mt-2 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
                         <div className="prose prose-base max-w-none">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.thinking}</ReactMarkdown>
+                          <Streamdown components={{ code: CodeBlock }}>{msg.thinking}</Streamdown>
                         </div>
                       </div>
                     </details>
@@ -199,7 +197,7 @@ export default function MessageList({
                   )}
                   <div className="bg-white/60 dark:bg-[#212121] rounded-xl px-4 py-2">
                     <div className="prose prose-base max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                      <Streamdown components={{ code: CodeBlock }}>{msg.content}</Streamdown>
                     </div>
                   </div>
                   {(() => {

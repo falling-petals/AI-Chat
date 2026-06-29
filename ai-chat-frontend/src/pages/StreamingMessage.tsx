@@ -1,6 +1,4 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
+import { Streamdown } from 'streamdown';
 import { Sparkles } from 'lucide-react';
 import CodeBlock from '../components/CodeBlock';
 
@@ -23,14 +21,14 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
           </summary>
           <div className="pb-2 pt-1 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
             <div className="prose prose-sm max-w-none text-zinc-500 dark:text-zinc-400">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{thinking}</ReactMarkdown>
+              <Streamdown components={{ code: CodeBlock }}>{thinking}</Streamdown>
             </div>
           </div>
         </details>
       )}
       {content ? (
         <div className="prose prose-base max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{content}</ReactMarkdown>
+          <Streamdown mode="streaming" parseIncompleteMarkdown components={{ code: CodeBlock }}>{content}</Streamdown>
         </div>
       ) : streaming && !thinking && (
         <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">

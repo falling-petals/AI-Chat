@@ -6,6 +6,7 @@ import { Copy, Check } from 'lucide-react';
 interface Props {
   className?: string;
   children?: React.ReactNode;
+  node?: unknown;
 }
 
 export default function CodeBlock({ className, children }: Props) {
