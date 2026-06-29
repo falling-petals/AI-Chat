@@ -21,8 +21,10 @@ export default function StreamingMessage({ content, thinking, streaming }: Strea
             <Sparkles className="w-3.5 h-3.5" />
             {streaming && !content ? 'Thinking...' : 'Thought'}
           </summary>
-          <div className="pb-2 pt-1">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 whitespace-pre-wrap leading-relaxed">{thinking}</p>
+          <div className="pb-2 pt-1 pl-3 border-l-2 border-zinc-200 dark:border-zinc-700">
+            <div className="prose prose-sm max-w-none text-zinc-500 dark:text-zinc-400">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlock }}>{thinking}</ReactMarkdown>
+            </div>
           </div>
         </details>
       )}
