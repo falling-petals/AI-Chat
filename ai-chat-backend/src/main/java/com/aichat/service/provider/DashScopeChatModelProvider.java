@@ -12,6 +12,10 @@ import reactor.core.publisher.Flux;
 @Component("dashscope")
 public class DashScopeChatModelProvider implements ChatModelProvider {
 
+    private static final String[] MULTIMODAL_MODEL_PREFIXES = {
+        "qwen-vl", "qwen2.5-vl", "qwen2-vl", "qwen-audio"
+    };
+
     private final DashScopeChatModel defaultChatModel;
 
     public DashScopeChatModelProvider(DashScopeChatModel defaultChatModel) {
@@ -29,12 +33,25 @@ public class DashScopeChatModelProvider implements ChatModelProvider {
                 .withModel(config.getModelName())
                 .build();
 
+        if (isMultiModal(config.getModelName())) {
+            options.setMultiModel(true);
+        }
+
         DashScopeChatModel model = defaultChatModel.mutate()
                 .dashScopeApi(api)
                 .defaultOptions(options)
                 .build();
 
         return model.stream(prompt);
+    }
+
+    static boolean isMultiModal(String modelName) {
+        if (modelName == null || modelName.isBlank()) return false;
+        String lower = modelName.toLowerCase();
+        for (String prefix : MULTIMODAL_MODEL_PREFIXES) {
+            if (lower.startsWith(prefix)) return true;
+        }
+        return false;
     }
 
     private static String normalizeBaseUrl(String baseUrl) {
