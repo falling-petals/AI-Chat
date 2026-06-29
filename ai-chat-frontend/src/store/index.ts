@@ -131,6 +131,13 @@ export const useChatStore = create<ChatStore>()(
       appendMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
 
       updateMessage: async (id: number, content: string) => {
+        if (id > 1000000000000) {
+          // 临时 ID（未同步到后端），仅本地更新
+          set((state) => ({
+            messages: state.messages.map((m) => (m.id === id ? { ...m, content } : m)),
+          }));
+          return;
+        }
         try {
           await messageApi.update(id, content);
           set((state) => ({
@@ -142,6 +149,12 @@ export const useChatStore = create<ChatStore>()(
       },
 
       deleteMessage: async (id: number) => {
+        if (id > 1000000000000) {
+          set((state) => ({
+            messages: state.messages.filter((m) => m.id !== id),
+          }));
+          return;
+        }
         try {
           await messageApi.delete(id);
           set((state) => ({

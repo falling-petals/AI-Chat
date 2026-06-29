@@ -62,6 +62,9 @@ public class ChatServiceImpl implements ChatService {
     @Value("${app.chat-context-size:30}")
     private int chatContextSize;
 
+    @Value("${app.upload-dir:./uploads}")
+    private String uploadDir;
+
     public ChatServiceImpl(Map<String, ChatModelProvider> providers,
                             ModelConfigService modelConfigService,
                             ConversationService conversationService,
@@ -97,6 +100,7 @@ public class ChatServiceImpl implements ChatService {
                     userMsg.setFileIds(objectMapper.writeValueAsString(fileIds));
                 } catch (JsonProcessingException ignored) {}
             }
+            userMsg.setSearchEnabled(searchEnabled != null && searchEnabled);
             userMsg.setCreatedAt(LocalDateTime.now());
             messageMapper.insert(userMsg);
 
@@ -142,7 +146,8 @@ public class ChatServiceImpl implements ChatService {
                 } catch (Exception ignored) {}
             }
 
-            streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, false, userMsg.getCreatedAt());
+            boolean hadSearch = Boolean.TRUE.equals(userMsg.getSearchEnabled());
+            streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, hadSearch, userMsg.getCreatedAt());
             return emitter;
         } catch (Exception e) {
             log.error("Regenerate setup error for userId={}", userId, e);
@@ -290,7 +295,23 @@ public class ChatServiceImpl implements ChatService {
                     },
                     error -> {
                         log.error("Stream error: {}", error.getMessage(), error);
-                        savedToDb.set(true);
+                        String partialContent = fullContent.toString();
+                        String partialThinking = fullThinking.toString();
+                        if (!partialContent.isBlank() || !partialThinking.isBlank()) {
+                            if (!savedToDb.getAndSet(true)) {
+                                Message assistantMsg = new Message();
+                                assistantMsg.setConversationId(conv.getId());
+                                assistantMsg.setRole("assistant");
+                                assistantMsg.setContent(partialContent);
+                                if (!partialThinking.isBlank()) {
+                                    assistantMsg.setThinking(partialThinking);
+                                }
+                                messageMapper.insert(assistantMsg);
+                                log.warn("流式异常，已保存部分 AI 回复 ({} 字符)", partialContent.length());
+                            }
+                        } else {
+                            savedToDb.set(true);
+                        }
                         sendEvent(emitter, "error", error.getMessage());
                         try { emitter.complete(); } catch (Exception ignored) {}
                     },
@@ -373,7 +394,7 @@ public class ChatServiceImpl implements ChatService {
             String mime = file.getMimeType();
             if (mime != null && mime.startsWith("image/")) {
                 try {
-                    java.nio.file.Path path = java.nio.file.Paths.get("./uploads", file.getStoredName());
+                    java.nio.file.Path path = java.nio.file.Paths.get(uploadDir, file.getStoredName());
                     byte[] imageBytes = java.nio.file.Files.readAllBytes(path);
                     String base64 = Base64.getEncoder().encodeToString(imageBytes);
                     mediaList.add(new org.springframework.ai.content.Media(

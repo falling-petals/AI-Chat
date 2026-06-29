@@ -65,6 +65,9 @@ CREATE TABLE file (
 
 ALTER TABLE message ADD COLUMN file_ids TEXT DEFAULT NULL COMMENT '关联文件ID列表，JSON数组';
 
+-- Migration (2026-06-29): 记录用户消息是否开启了联网搜索
+ALTER TABLE message ADD COLUMN search_enabled TINYINT(1) DEFAULT 0 COMMENT '是否开启了联网搜索';
+
 -- ============================================================
 -- Migration (2026-06-27): 对话置顶/归档
 -- 已有数据库执行：

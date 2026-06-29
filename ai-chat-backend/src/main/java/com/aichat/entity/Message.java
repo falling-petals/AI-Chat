@@ -11,5 +11,6 @@ public class Message {
     private String content;
     private String thinking;
     private String fileIds;
+    private Boolean searchEnabled;
     private LocalDateTime createdAt;
 }

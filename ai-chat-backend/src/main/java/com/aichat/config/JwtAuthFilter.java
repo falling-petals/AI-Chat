@@ -31,7 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         for (String pub : PUBLIC_PATHS) {
-            if (path.equals(pub)) return true;
+            if (path.startsWith(pub)) return true;
         }
         return false;
     }
