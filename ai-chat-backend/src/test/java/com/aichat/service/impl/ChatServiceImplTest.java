@@ -3,8 +3,11 @@ package com.aichat.service.impl;
 import com.aichat.entity.Conversation;
 import com.aichat.mapper.MessageMapper;
 import com.aichat.service.ConversationService;
+import com.aichat.service.FileService;
 import com.aichat.service.MessageService;
 import com.aichat.service.ModelConfigService;
+import com.aichat.service.TavilyService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,10 +31,12 @@ class ChatServiceImplTest {
     @Mock private ConversationService conversationService;
     @Mock private MessageService messageService;
     @Mock private MessageMapper messageMapper;
+    @Mock private FileService fileService;
+    @Mock private TavilyService tavilyService;
 
     @BeforeEach
     void setUp() {
-        chatService = new ChatServiceImpl(new HashMap<>(), modelConfigService, conversationService, messageService, messageMapper);
+        chatService = new ChatServiceImpl(new HashMap<>(), modelConfigService, conversationService, messageService, messageMapper, fileService, tavilyService, new ObjectMapper(), "test-api-key");
     }
 
     @Test

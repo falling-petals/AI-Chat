@@ -1,6 +1,6 @@
 import { useChatStore } from '../store';
 import request from './client';
-import type { Conversation, MessageVO, ModelConfig, FileInfo, SearchResult } from '../types';
+import type { Conversation, MessageVO, ModelConfig, FileInfo, ModelInfo, SearchResult } from '../types';
 
 export interface SSEOptions {
   onMessage: (text: string) => void;
@@ -64,6 +64,10 @@ export const fileApi = {
 
   delete: (id: number) =>
     request<void>(`/files/${id}`, { method: 'DELETE' }),
+};
+
+export const modelApi = {
+  available: () => request<ModelInfo[]>('/chat/models/available'),
 };
 
 export const modelConfigApi = {
@@ -200,10 +204,12 @@ export function chatStream(
   options: SSEOptions,
   fileIds?: number[],
   searchEnabled?: boolean,
+  modelProvider?: string,
+  modelName?: string,
 ): { promise: Promise<void>; abort: () => void } {
   return createSSEStream(
     '/api/chat/stream',
-    { conversationId, content, fileIds, searchEnabled },
+    { conversationId, content, fileIds, searchEnabled, modelProvider, modelName },
     options,
   );
 }

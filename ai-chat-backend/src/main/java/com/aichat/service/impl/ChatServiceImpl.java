@@ -83,7 +83,64 @@ public class ChatServiceImpl implements ChatService {
     @Value("${app.upload-dir:./uploads}")
     private String uploadDir;
 
-    public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds, Boolean searchEnabled) {
+    @Value("${app.default-model.provider:}")
+    private String defaultModelProvider;
+
+    @Value("${app.default-model.model-name:}")
+    private String defaultModelName;
+
+    private ModelConfig buildDefaultModelConfig() {
+        if (defaultModelProvider.isBlank() || defaultModelName.isBlank()) return null;
+        ModelConfig config = new ModelConfig();
+        config.setProvider(defaultModelProvider);
+        config.setModelName(defaultModelName);
+        config.setApiKey(dashscopeApiKey);
+        return config;
+    }
+
+    private String dashscopeApiKey;
+
+    public ChatServiceImpl(Map<String, ChatModelProvider> providers,
+                            ModelConfigService modelConfigService,
+                            ConversationService conversationService,
+                            MessageService messageService,
+                            MessageMapper messageMapper,
+                            FileService fileService,
+                            TavilyService tavilyService,
+                            ObjectMapper objectMapper,
+                            @Value("${spring.ai.dashscope.api-key}") String dashscopeApiKey) {
+        this.providers = providers;
+        this.modelConfigService = modelConfigService;
+        this.conversationService = conversationService;
+        this.messageService = messageService;
+        this.messageMapper = messageMapper;
+        this.fileService = fileService;
+        this.tavilyService = tavilyService;
+        this.objectMapper = objectMapper;
+        this.dashscopeApiKey = dashscopeApiKey;
+    }
+
+    private ModelConfig resolveModelConfig(Long userId, String modelProvider, String modelName) {
+        // 1. 如果请求指定了模型，优先使用
+        if (modelProvider != null && modelName != null) {
+            ModelConfig userConfig = modelConfigService.findByProviderAndModel(userId, modelProvider, modelName);
+            if (userConfig != null) return userConfig;
+            // 如果匹配默认模型则用默认
+            if (modelProvider.equals(defaultModelProvider) && modelName.equals(defaultModelName)) {
+                ModelConfig dc = buildDefaultModelConfig();
+                if (dc != null) return dc;
+            }
+        }
+        // 2. 用户激活的模型
+        ModelConfig active = modelConfigService.getActive(userId);
+        if (active != null) return active;
+        // 3. 回退到默认模型
+        ModelConfig dc = buildDefaultModelConfig();
+        if (dc != null) return dc;
+        return null;
+    }
+
+    public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds, Boolean searchEnabled, String modelProvider, String modelName) {
         SseEmitter emitter = createEmitter(userId);
         try {
             Conversation conv = conversationService.getById(conversationId, userId);
@@ -108,7 +165,7 @@ public class ChatServiceImpl implements ChatService {
             conv.setUpdatedAt(LocalDateTime.now());
             conversationService.update(userId, conv);
 
-            streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt());
+            streamAiResponse(emitter, userId, conv, content, fileIds, searchEnabled != null && searchEnabled, userMsg.getCreatedAt(), modelProvider, modelName);
             return emitter;
         } catch (Exception e) {
             log.error("Stream setup error for userId={}", userId, e);
@@ -154,7 +211,7 @@ public class ChatServiceImpl implements ChatService {
             }
 
             boolean hadSearch = Boolean.TRUE.equals(userMsg.getSearchEnabled());
-            streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, hadSearch, userMsg.getCreatedAt());
+            streamAiResponse(emitter, userId, conv, userMsg.getContent(), fileIds, hadSearch, userMsg.getCreatedAt(), null, null);
             return emitter;
         } catch (Exception e) {
             log.error("Regenerate setup error for userId={}", userId, e);
@@ -175,8 +232,8 @@ public class ChatServiceImpl implements ChatService {
         return emitter;
     }
 
-    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds, boolean searchEnabled, LocalDateTime before) {
-        ModelConfig config = modelConfigService.getActive(userId);
+    private void streamAiResponse(SseEmitter emitter, Long userId, Conversation conv, String userContent, List<Long> fileIds, boolean searchEnabled, LocalDateTime before, String modelProvider, String modelName) {
+        ModelConfig config = resolveModelConfig(userId, modelProvider, modelName);
         if (config == null) {
             sendEvent(emitter, "error", "请先在设置页面配置并激活模型");
             emitter.complete();

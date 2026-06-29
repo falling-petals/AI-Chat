@@ -8,4 +8,6 @@ public class ChatRequest {
     private String content;
     private java.util.List<Long> fileIds;
     private Boolean searchEnabled;
+    private String modelProvider;
+    private String modelName;
 }

@@ -5,7 +5,8 @@ import { useChatStore } from '../store';
 import { useChatStream } from '../hooks/useChatStream';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { useEditMessage } from '../hooks/useEditMessage';
-import type { MessageVO } from '../types';
+import { modelApi } from '../api/chat';
+import type { MessageVO, ModelInfo } from '../types';
 import Sidebar from './Sidebar';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
@@ -28,6 +29,8 @@ export default function Chat() {
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [selectedModel, setSelectedModel] = useState<{ provider: string; name: string } | null>(null);
 
   const handleSelectConv = useCallback(async (id: number) => {
     await selectConversation(id);
@@ -35,6 +38,15 @@ export default function Chat() {
   }, [selectConversation]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
+
+  useEffect(() => {
+    modelApi.available().then((models) => {
+      setAvailableModels(models);
+      if (models.length > 0 && !selectedModel) {
+        setSelectedModel({ provider: models[0].provider, name: models[0].modelName });
+      }
+    }).catch(() => {});
+  }, []);
 
   // 刷新页面时从后端重新加载当前会话的消息（localStorage 可能已过时）
   useEffect(() => {
@@ -68,7 +80,7 @@ export default function Chat() {
       const convId = editingMessage.conversationId;
       if (convId) {
         setCurrentConvId(convId);
-        await send(convId, text, [], searchEnabled);
+        await send(convId, text, [], searchEnabled, selectedModel?.provider, selectedModel?.name);
       }
       return;
     }
@@ -89,9 +101,9 @@ export default function Chat() {
       files: uploadedFiles.filter(f => !f.uploading).map(f => f.fileInfo),
     });
 
-    await send(convId, text, fileIds, searchEnabled);
+    await send(convId, text, fileIds, searchEnabled, selectedModel?.provider, selectedModel?.name);
   }, [input, streaming, currentConvId, editingMessage, uploadedFiles, createConversation,
-      setCurrentConvId, appendMessage, updateMessage, cancelEdit, regenerate, send, searchEnabled, removeFile]);
+      setCurrentConvId, appendMessage, updateMessage, cancelEdit, regenerate, send, searchEnabled, removeFile, selectedModel]);
 
   const handleEdit = useCallback((msg: MessageVO) => {
     setInput(msg.content);
@@ -195,6 +207,9 @@ export default function Chat() {
           onToggleSearch={() => setSearchEnabled((prev) => !prev)}
           streaming={streaming}
           onStop={stop}
+          availableModels={availableModels}
+          selectedModel={selectedModel}
+          onSelectModel={setSelectedModel}
         />
       </div>
     </div>

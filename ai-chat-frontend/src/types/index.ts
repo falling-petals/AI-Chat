@@ -51,6 +51,13 @@ export interface LoginResponse {
   avatar: string | null;
 }
 
+export interface ModelInfo {
+  provider: string;
+  modelName: string;
+  isDefault: boolean;
+  configId: number | null;
+}
+
 export interface SearchResult {
   title: string;
   url: string;

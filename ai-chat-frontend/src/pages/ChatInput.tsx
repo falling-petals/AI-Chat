@@ -1,5 +1,7 @@
-import { FileText, Paperclip, Search, Square, ArrowUp } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { FileText, Paperclip, Search, Square, ArrowUp, ChevronDown } from 'lucide-react';
 import type { UploadFileItem } from '../hooks/useFileUpload';
+import type { ModelInfo } from '../types';
 
 interface ChatInputProps {
   value: string;
@@ -16,9 +18,24 @@ interface ChatInputProps {
   onToggleSearch: () => void;
   streaming: boolean;
   onStop: () => void;
+  availableModels: ModelInfo[];
+  selectedModel: { provider: string; name: string } | null;
+  onSelectModel: (model: { provider: string; name: string }) => void;
 }
 
-export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile, searchEnabled, onToggleSearch, streaming, onStop }: ChatInputProps) {
+export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile, searchEnabled, onToggleSearch, streaming, onStop, availableModels, selectedModel, onSelectModel }: ChatInputProps) {
+  const [modelPickerOpen, setModelPickerOpen] = useState(false);
+  const modelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (modelRef.current && !modelRef.current.contains(e.target as Node)) {
+        setModelPickerOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const imageItem = Array.from(e.clipboardData.items).find(item => item.type.startsWith('image/'));
     if (!imageItem) return;
@@ -104,6 +121,40 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           )}
           <div className="flex items-center justify-between px-2 pb-2">
             <div className="flex items-center gap-1">
+              {availableModels.length > 0 && selectedModel && (
+                <div className="relative" ref={modelRef}>
+                  <button
+                    onClick={() => setModelPickerOpen(!modelPickerOpen)}
+                    disabled={streaming}
+                    className="flex items-center gap-1 px-2 py-1.5 rounded text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+                  >
+                    <span className="max-w-24 truncate">{selectedModel.name}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                  {modelPickerOpen && (
+                    <div className="absolute bottom-full left-0 mb-1 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 z-50 max-h-60 overflow-y-auto">
+                      {availableModels.map((m, i) => (
+                        <button
+                          key={m.configId ?? `default-${i}`}
+                          onClick={() => {
+                            onSelectModel({ provider: m.provider, name: m.modelName });
+                            setModelPickerOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${
+                            selectedModel.provider === m.provider && selectedModel.name === m.modelName
+                              ? 'text-sky-600 dark:text-sky-400'
+                              : 'text-zinc-600 dark:text-zinc-400'
+                          }`}
+                        >
+                          <span className="font-medium">{m.modelName}</span>
+                          {m.isDefault && <span className="ml-1.5 text-[10px] text-zinc-400">(默认)</span>}
+                          <span className="ml-1.5 text-[10px] text-zinc-400 opacity-60">{m.provider}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <button
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={disabled}

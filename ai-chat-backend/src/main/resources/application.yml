@@ -31,6 +31,9 @@ app:
   upload-dir: ./uploads
   file-extract-max-chars: 50000
   chat-context-size: 30
+  default-model:
+    provider: dashscope
+    model-name: qwen-plus
 
 tavily:
   api-key: placeholder

@@ -17,6 +17,14 @@ public class ModelConfigServiceImpl implements ModelConfigService {
         this.modelConfigMapper = modelConfigMapper;
     }
 
+    public ModelConfig findByProviderAndModel(Long userId, String provider, String modelName) {
+        return modelConfigMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ModelConfig>()
+                        .eq(ModelConfig::getUserId, userId)
+                        .eq(ModelConfig::getProvider, provider)
+                        .eq(ModelConfig::getModelName, modelName));
+    }
+
     public List<ModelConfig> listByUser(Long userId) {
         return modelConfigMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ModelConfig>()

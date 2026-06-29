@@ -49,6 +49,7 @@ export function useChatStream() {
 
   const send = useCallback(async (
     convId: number, text: string, fileIds?: number[], searchEnabled?: boolean,
+    modelProvider?: string, modelName?: string,
   ) => {
     await startStreamInternal(async () => {
       let actualConvId = convId;
@@ -78,7 +79,7 @@ export function useChatStream() {
           setThinkingContent('');
         },
         onFinally: () => setStreaming(false),
-      }, fileIds, searchEnabled);
+      }, fileIds, searchEnabled, modelProvider, modelName);
       abortRef.current = abort;
       await promise;
     });
