@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Check, Settings as SettingsIcon, Eye, EyeOff, Key, Bookmark, Bot, Info } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Settings as SettingsIcon, Eye, EyeOff, Key, Bookmark, Bot, Info } from 'lucide-react';
 import { modelConfigApi } from '../api/chat';
 import type { ModelConfig } from '../types';
 import { toast } from 'sonner';
@@ -54,7 +54,6 @@ export default function Settings() {
           modelName: form.modelName,
           apiKey: form.apiKey,
           baseUrl: form.baseUrl || null,
-          isActive: configs.length === 0,
         });
       }
       setForm(emptyForm);
@@ -90,16 +89,6 @@ export default function Settings() {
     }
   };
 
-  const handleActivate = async (cfg: ModelConfig) => {
-    try {
-      await modelConfigApi.activate(cfg.id!);
-      toast.success('已设为当前模型');
-      await loadConfigs();
-    } catch (err: any) {
-      toast.error(err.message || '激活失败');
-    }
-  };
-
   const cancelForm = () => {
     setForm(emptyForm);
     setEditingId(null);
@@ -128,7 +117,7 @@ export default function Settings() {
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
               在这里配置你的 API Key 和模型。选择供应商后填写对应模型的名称和 API Key。
               OpenAI 用户也可填入兼容的 API 地址，如 <code className="text-xs bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded">https://api.deepseek.com</code>。
-              配置完成后点击 <Check className="w-3.5 h-3.5 inline text-green-500" /> 设为当前使用的模型。
+              配置完成后可在聊天输入框左侧切换模型。
             </p>
           </div>
 
@@ -140,9 +129,6 @@ export default function Settings() {
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="px-2.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-medium rounded-md">{cfg.provider}</span>
                     <span className="font-medium text-zinc-800 dark:text-zinc-100">{cfg.modelName}</span>
-                    {cfg.isActive && (
-                      <span className="px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded-md">当前使用</span>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                     <Key className="w-3.5 h-3.5" />
@@ -158,11 +144,6 @@ export default function Settings() {
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  {!cfg.isActive && (
-                    <button onClick={() => handleActivate(cfg)} className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors cursor-pointer" title="设为当前使用">
-                      <Check className="w-4 h-4 text-zinc-400 hover:text-green-500" />
-                    </button>
-                  )}
                   <button onClick={() => handleEdit(cfg)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer" title="编辑">
                     <Bookmark className="w-4 h-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
                   </button>

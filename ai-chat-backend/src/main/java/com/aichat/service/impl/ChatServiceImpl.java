@@ -113,10 +113,7 @@ public class ChatServiceImpl implements ChatService {
                 if (dc != null) return dc;
             }
         }
-        // 2. 用户激活的模型
-        ModelConfig active = modelConfigService.getActive(userId);
-        if (active != null) return active;
-        // 3. 回退到默认模型
+        // 2. 回退到默认模型
         ModelConfig dc = buildDefaultModelConfig();
         if (dc != null) return dc;
         return null;
