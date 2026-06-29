@@ -36,6 +36,14 @@ export default function Chat() {
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
+  // 刷新页面时从后端重新加载当前会话的消息（localStorage 可能已过时）
+  useEffect(() => {
+    if (currentConvId) {
+      selectConversation(currentConvId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSend = useCallback(async () => {
     if (!input.trim() || streaming) return;
 
@@ -54,6 +62,13 @@ export default function Chat() {
 
       if (nextAiMsg) {
         await regenerate(nextAiMsg.id);
+        return;
+      }
+      // 编辑后无后续 AI 回复 → 直接触发新的 AI 响应
+      const convId = editingMessage.conversationId;
+      if (convId) {
+        setCurrentConvId(convId);
+        await send(convId, text, [], searchEnabled);
       }
       return;
     }
@@ -93,8 +108,9 @@ export default function Chat() {
   }, [deleteMessage]);
 
   const handleRegenerate = useCallback(async (messageId: number) => {
+    if (streaming) return;
     await regenerate(messageId);
-  }, [regenerate]);
+  }, [regenerate, streaming]);
 
   const setToken = useChatStore((s) => s.setToken);
 
@@ -168,7 +184,7 @@ export default function Chat() {
           onChange={setInput}
           onSend={handleSend}
           onCancelEdit={handleCancelEdit}
-          disabled={streaming}
+          disabled={false}
           errorMessage={errorMessage}
           editing={!!editingMessage}
           uploadedFiles={uploadedFiles}

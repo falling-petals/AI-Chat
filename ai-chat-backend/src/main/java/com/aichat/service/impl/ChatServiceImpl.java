@@ -245,10 +245,10 @@ public class ChatServiceImpl implements ChatService {
 
         emitter.onCompletion(() -> {
             log.debug("SSE onCompletion for userId={}", userId);
-            if (!savedToDb.getAndSet(true)) {
-                String partialContent = fullContent.toString();
-                String partialThinking = fullThinking.toString();
-                if (!partialContent.isBlank() || !partialThinking.isBlank()) {
+            String partialContent = fullContent.toString();
+            String partialThinking = fullThinking.toString();
+            if (!partialContent.isBlank() || !partialThinking.isBlank()) {
+                if (!savedToDb.getAndSet(true)) {
                     Message assistantMsg = new Message();
                     assistantMsg.setConversationId(conv.getId());
                     assistantMsg.setRole("assistant");
@@ -259,9 +259,6 @@ public class ChatServiceImpl implements ChatService {
                     messageMapper.insert(assistantMsg);
                     log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
                 }
-            }
-            if (disposableRef.get() != null && !disposableRef.get().isDisposed()) {
-                disposableRef.get().dispose();
             }
         });
 
@@ -295,30 +292,31 @@ public class ChatServiceImpl implements ChatService {
                         log.error("Stream error: {}", error.getMessage(), error);
                         savedToDb.set(true);
                         sendEvent(emitter, "error", error.getMessage());
-                        emitter.complete();
+                        try { emitter.complete(); } catch (Exception ignored) {}
                     },
                     () -> {
-                        savedToDb.set(true);
-                        Message assistantMsg = new Message();
-                        assistantMsg.setConversationId(conv.getId());
-                        assistantMsg.setRole("assistant");
-                        assistantMsg.setContent(fullContent.toString());
-                        if (!fullThinking.isEmpty()) {
-                            assistantMsg.setThinking(fullThinking.toString());
-                        }
-                        messageMapper.insert(assistantMsg);
-
-                        if (searchEnabled && !searchResults.isEmpty()) {
-                            try {
-                                String sourcesJson = objectMapper.writeValueAsString(searchResults);
-                                sendEvent(emitter, "sources", sourcesJson);
-                            } catch (JsonProcessingException e) {
-                                log.warn("序列化搜索结果失败", e);
+                        if (!savedToDb.getAndSet(true)) {
+                            Message assistantMsg = new Message();
+                            assistantMsg.setConversationId(conv.getId());
+                            assistantMsg.setRole("assistant");
+                            assistantMsg.setContent(fullContent.toString());
+                            if (!fullThinking.isEmpty()) {
+                                assistantMsg.setThinking(fullThinking.toString());
                             }
-                        }
+                            messageMapper.insert(assistantMsg);
 
-                        sendEvent(emitter, "done", "{\"messageId\":" + assistantMsg.getId() + "}");
-                        emitter.complete();
+                            if (searchEnabled && !searchResults.isEmpty()) {
+                                try {
+                                    String sourcesJson = objectMapper.writeValueAsString(searchResults);
+                                    sendEvent(emitter, "sources", sourcesJson);
+                                } catch (JsonProcessingException e) {
+                                    log.warn("序列化搜索结果失败", e);
+                                }
+                            }
+
+                            sendEvent(emitter, "done", "{\"messageId\":" + assistantMsg.getId() + "}");
+                        }
+                        try { emitter.complete(); } catch (Exception ignored) {}
                     }
             );
             disposableRef.set(disposable);

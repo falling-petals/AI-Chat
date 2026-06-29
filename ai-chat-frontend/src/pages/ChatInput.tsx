@@ -86,8 +86,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            placeholder={disabled ? 'AI is thinking...' : '输入消息...'}
-            disabled={disabled}
+            placeholder="输入消息..."
             className="w-full bg-transparent px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 outline-none resize-none"
             rows={1}
             style={{ maxHeight: '200px' }}

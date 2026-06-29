@@ -173,7 +173,6 @@ function createSSEStream(
   const promise = readSSEStream(endpoint, body, options, controller.signal)
     .catch((err) => {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        options.onError?.('请求超时，请重试');
         return;
       }
       throw err;

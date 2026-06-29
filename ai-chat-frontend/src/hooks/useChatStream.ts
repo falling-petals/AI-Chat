@@ -13,11 +13,23 @@ export function useChatStream() {
   const createConversation = useChatStore((s) => s.createConversation);
   const setCurrentConvId = useChatStore((s) => s.setCurrentConvId);
 
-  const stop = useCallback(() => {
+  const stop = useCallback(async () => {
     abortRef.current?.();
     abortRef.current = null;
+    const convId = useChatStore.getState().currentConvId;
+    if (convId) {
+      // 轮询等待后端保存 AI 回复（最多 15 秒）
+      const prevLen = useChatStore.getState().messages.length;
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        await selectConversation(convId);
+        if (useChatStore.getState().messages.length > prevLen) break;
+      }
+    }
     setStreaming(false);
-  }, []);
+    setStreamContent('');
+    setThinkingContent('');
+  }, [selectConversation]);
 
   const startStreamInternal = useCallback(async (streamFn: () => Promise<void>) => {
     setStreaming(true);
@@ -54,9 +66,9 @@ export function useChatStream() {
           if (messageId && pendingSourcesRef.current) {
             useChatStore.getState().setMessageSearchResults(messageId, pendingSourcesRef.current);
           }
+          await selectConversation(actualConvId);
           setStreamContent('');
           setThinkingContent('');
-          await selectConversation(actualConvId);
         },
         onError: (msg) => {
           setErrorMessage(msg);
@@ -72,16 +84,28 @@ export function useChatStream() {
   }, [startStreamInternal, createConversation, setCurrentConvId, selectConversation]);
 
   const regenerate = useCallback(async (messageId: number) => {
+    // 立即从本地移除被替换的旧 AI 回复及之后的所有消息
+    const msgs = useChatStore.getState().messages;
+    const idx = msgs.findIndex(m => m.id === messageId);
+    if (idx >= 0) {
+      for (let i = idx; i >= 0; i--) {
+        if (msgs[i].role === 'user') {
+          useChatStore.setState({ messages: msgs.slice(0, i + 1) });
+          break;
+        }
+      }
+    }
+
     await startStreamInternal(async () => {
       const { promise, abort } = regenerateStream(messageId, {
         onMessage: (t) => setStreamContent((prev) => prev + t),
         onThinking: (t) => setThinkingContent((prev) => prev + t),
         onDone: async () => {
           setStreaming(false);
-          setStreamContent('');
-          setThinkingContent('');
           const convId = useChatStore.getState().currentConvId;
           if (convId) await selectConversation(convId);
+          setStreamContent('');
+          setThinkingContent('');
         },
         onError: (msg) => {
           setErrorMessage(msg);
