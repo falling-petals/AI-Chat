@@ -36,7 +36,7 @@ export default {
             li: { marginTop: '0.3em', marginBottom: '0.3em' },
             'figure figcaption': { color: '#64748b', fontSize: '0.875em' },
             img: { borderRadius: '0.5rem' },
-            table: { fontSize: '0.9375em' },
+            table: { fontSize: '0.9375em', display: 'block', overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: '100%' },
             thead: { color: '#0f172a', borderBottomColor: '#e2e8f0' },
             'tbody tr': { borderBottomColor: '#f1f5f9' },
           },

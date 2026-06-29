@@ -30,7 +30,7 @@ export default function CodeBlock({ className, children }: Props) {
     }, [trimmedCode]);
 
   return (
-    <div className="relative group">
+    <div className="relative group overflow-x-auto">
       <button
         onClick={handleCopy}
         className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/10 text-white/60 hover:text-white hover:bg-white/20 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"

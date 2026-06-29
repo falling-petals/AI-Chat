@@ -166,7 +166,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex bg-white dark:bg-[#151515]">
+    <div className="h-screen flex bg-white dark:bg-[#151515] overflow-x-hidden">
       <Sidebar
         conversations={conversations}
         currentConvId={currentConvId}
