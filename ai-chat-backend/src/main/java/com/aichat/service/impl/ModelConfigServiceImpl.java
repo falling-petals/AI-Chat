@@ -31,9 +31,15 @@ public class ModelConfigServiceImpl implements ModelConfigService {
                         .eq(ModelConfig::getUserId, userId));
     }
 
+    private static final String DASHSCOPE_COMPATIBLE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+
     @Transactional(rollbackFor = Exception.class)
     public void save(Long userId, ModelConfig config) {
         config.setUserId(userId);
+        if ("dashscope".equalsIgnoreCase(config.getProvider())
+                && (config.getBaseUrl() == null || config.getBaseUrl().isBlank())) {
+            config.setBaseUrl(DASHSCOPE_COMPATIBLE_URL);
+        }
         modelConfigMapper.insert(config);
     }
 
