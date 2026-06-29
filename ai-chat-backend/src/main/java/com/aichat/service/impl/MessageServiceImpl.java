@@ -9,10 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -102,7 +100,7 @@ public class MessageServiceImpl implements MessageService {
         if (after == null) return;
         messageMapper.delete(new LambdaQueryWrapper<Message>()
                 .eq(Message::getConversationId, conversationId)
-                .gt(Message::getCreatedAt, after.getCreatedAt()));
+                .gt(Message::getId, afterMessageId));
     }
 
     public Message getPreviousUserMessage(Long conversationId, Long messageId) {

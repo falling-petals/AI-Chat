@@ -36,7 +36,9 @@ public class ChatController {
     }
 
     @GetMapping("/messages/{conversationId}")
-    public Result<List<MessageVO>> messages(@PathVariable Long conversationId) {
+    public Result<List<MessageVO>> messages(HttpServletRequest request, @PathVariable Long conversationId) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (!isOwner(userId, conversationId)) return Result.error(403, "无权操作");
         return Result.success(messageService.listByConversation(conversationId));
     }
 
