@@ -56,6 +56,24 @@ public class ChatServiceImpl implements ChatService {
     private final TavilyService tavilyService;
     private final ObjectMapper objectMapper;
 
+    public ChatServiceImpl(Map<String, ChatModelProvider> providers,
+                            ModelConfigService modelConfigService,
+                            ConversationService conversationService,
+                            MessageService messageService,
+                            MessageMapper messageMapper,
+                            FileService fileService,
+                            TavilyService tavilyService,
+                            ObjectMapper objectMapper) {
+        this.providers = providers;
+        this.modelConfigService = modelConfigService;
+        this.conversationService = conversationService;
+        this.messageService = messageService;
+        this.messageMapper = messageMapper;
+        this.fileService = fileService;
+        this.tavilyService = tavilyService;
+        this.objectMapper = objectMapper;
+    }
+
     @Value("${app.file-extract-max-chars:50000}")
     private int maxExtractChars;
 
@@ -64,23 +82,6 @@ public class ChatServiceImpl implements ChatService {
 
     @Value("${app.upload-dir:./uploads}")
     private String uploadDir;
-
-    public ChatServiceImpl(Map<String, ChatModelProvider> providers,
-                            ModelConfigService modelConfigService,
-                            ConversationService conversationService,
-                            MessageService messageService,
-                            MessageMapper messageMapper,
-                            FileService fileService,
-                            TavilyService tavilyService) {
-        this.providers = providers;
-        this.modelConfigService = modelConfigService;
-        this.conversationService = conversationService;
-        this.messageService = messageService;
-        this.messageMapper = messageMapper;
-        this.fileService = fileService;
-        this.tavilyService = tavilyService;
-        this.objectMapper = new ObjectMapper();
-    }
 
     public SseEmitter stream(Long userId, Long conversationId, String content, List<Long> fileIds, Boolean searchEnabled) {
         SseEmitter emitter = createEmitter(userId);
@@ -185,8 +186,44 @@ public class ChatServiceImpl implements ChatService {
         }
 
         List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
+
+        // 合并所有系统级内容为一个 SystemMessage
+        StringBuilder systemBuilder = new StringBuilder();
         if (conv.getSystemPrompt() != null && !conv.getSystemPrompt().isBlank()) {
-            messages.add(new SystemMessage(conv.getSystemPrompt()));
+            systemBuilder.append(conv.getSystemPrompt()).append("\n\n");
+        }
+
+        final List<SearchResult> searchResults;
+        if (searchEnabled) {
+            searchResults = tavilyService.search(userContent);
+            if (!searchResults.isEmpty()) {
+                systemBuilder.append("以下是来自互联网搜索的相关信息，请参考这些信息来回答用户问题：\n\n");
+                for (int i = 0; i < searchResults.size(); i++) {
+                    SearchResult r = searchResults.get(i);
+                    systemBuilder.append("[").append(i + 1).append("] ").append(r.getTitle()).append("\n");
+                    systemBuilder.append("    来源: ").append(r.getUrl()).append("\n");
+                    systemBuilder.append("    内容: ").append(r.getContent()).append("\n\n");
+                }
+            }
+        } else {
+            searchResults = List.of();
+        }
+
+        Set<Long> extractedFileIds = new HashSet<>();
+        if (fileIds != null && !fileIds.isEmpty()) {
+            List<com.aichat.entity.File> fileEntities = fileService.getByIds(fileIds);
+            for (com.aichat.entity.File f : fileEntities) {
+                String extracted = extractTextContent(f);
+                if (extracted != null) {
+                    systemBuilder.append("用户上传了文档「").append(f.getOriginalName()).append("」，其文本内容如下：\n\n");
+                    systemBuilder.append(extracted).append("\n\n");
+                    extractedFileIds.add(f.getId());
+                }
+            }
+        }
+
+        if (!systemBuilder.isEmpty()) {
+            messages.add(new SystemMessage(systemBuilder.toString().strip()));
         }
 
         // Load recent conversation history (exclude current message by `before` timestamp)
@@ -207,36 +244,6 @@ public class ChatServiceImpl implements ChatService {
                 } else if ("assistant".equals(hMsg.getRole())) {
                     messages.add(new AssistantMessage(
                             hMsg.getContent() != null ? hMsg.getContent() : ""));
-                }
-            }
-        }
-
-        final List<SearchResult> searchResults;
-        if (searchEnabled) {
-            searchResults = tavilyService.search(userContent);
-            if (!searchResults.isEmpty()) {
-                StringBuilder sb = new StringBuilder("以下是来自互联网搜索的相关信息，请参考这些信息来回答用户问题：\n\n");
-                for (int i = 0; i < searchResults.size(); i++) {
-                    SearchResult r = searchResults.get(i);
-                    sb.append("[").append(i + 1).append("] ").append(r.getTitle()).append("\n");
-                    sb.append("    来源: ").append(r.getUrl()).append("\n");
-                    sb.append("    内容: ").append(r.getContent()).append("\n\n");
-                }
-                messages.add(new SystemMessage(sb.toString()));
-            }
-        } else {
-            searchResults = List.of();
-        }
-
-        Set<Long> extractedFileIds = new HashSet<>();
-        if (fileIds != null && !fileIds.isEmpty()) {
-            List<com.aichat.entity.File> fileEntities = fileService.getByIds(fileIds);
-            for (com.aichat.entity.File f : fileEntities) {
-                String extracted = extractTextContent(f);
-                if (extracted != null) {
-                    messages.add(new SystemMessage(
-                            "用户上传了文档「" + f.getOriginalName() + "」，其文本内容如下：\n\n" + extracted));
-                    extractedFileIds.add(f.getId());
                 }
             }
         }

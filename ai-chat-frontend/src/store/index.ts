@@ -10,7 +10,6 @@ interface ChatStore {
   currentConvId: number | null;
   messages: MessageVO[];
   loading: boolean;
-  editingMessage: MessageVO | null;
   messageSearchResults: Record<number, SearchResult[]>;
 
   setToken: (token: string | null) => void;
@@ -25,7 +24,6 @@ interface ChatStore {
   appendMessage: (msg: MessageVO) => void;
   updateMessage: (id: number, content: string) => Promise<void>;
   deleteMessage: (id: number) => Promise<void>;
-  setEditingMessage: (msg: MessageVO | null) => void;
   setMessageSearchResults: (messageId: number, results: SearchResult[]) => void;
 }
 
@@ -38,7 +36,6 @@ export const useChatStore = create<ChatStore>()(
       currentConvId: null,
       messages: [],
       loading: false,
-      editingMessage: null,
       messageSearchResults: {},
 
       setToken: (token) => set({ token }),
@@ -165,8 +162,6 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      setEditingMessage: (msg) => set({ editingMessage: msg }),
-
       setMessageSearchResults: (messageId, results) =>
         set((state) => ({
           messageSearchResults: { ...state.messageSearchResults, [messageId]: results },
@@ -175,6 +170,11 @@ export const useChatStore = create<ChatStore>()(
     {
       name: 'chat-store',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        token: state.token,
+        theme: state.theme,
+        currentConvId: state.currentConvId,
+      }),
     },
   ),
 );

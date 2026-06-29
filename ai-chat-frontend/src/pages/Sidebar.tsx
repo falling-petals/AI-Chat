@@ -143,7 +143,7 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                       <Archive className="w-3.5 h-3.5 text-zinc-400" />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
+                      onClick={(e) => { e.stopPropagation(); if (window.confirm('确认删除此对话？')) onDelete(conv.id); }}
                       className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title="删除"
                     >
@@ -192,7 +192,7 @@ export default function Sidebar({ conversations, currentConvId, onSelect, onDele
                       <ArchiveRestore className="w-3.5 h-3.5 text-zinc-400" />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
+                      onClick={(e) => { e.stopPropagation(); if (window.confirm('确认删除此对话？')) onDelete(conv.id); }}
                       className="p-1 hover:bg-white dark:hover:bg-zinc-700 rounded-md cursor-pointer"
                       title="删除"
                     >

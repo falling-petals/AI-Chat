@@ -126,7 +126,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
             </div>
             <button
               onClick={streaming ? onStop : onSend}
-              disabled={!value.trim() && !streaming && !editing}
+              disabled={!value.trim() && !streaming}
               className="p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
               title={streaming ? 'Stop generating' : 'Send'}
             >
