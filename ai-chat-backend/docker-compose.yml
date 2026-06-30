@@ -5,6 +5,8 @@ services:
     build: .
     container_name: ai-chat-backend
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file: .env
     volumes:
       - uploads-data:/app/uploads
