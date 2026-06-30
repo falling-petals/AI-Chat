@@ -34,15 +34,22 @@ function FileAttachment({ file }: { file: { id: number; originalName: string; mi
     let cancelled = false;
     let blobUrl: string | null = null;
     const token = useChatStore.getState().token;
+    if (!token) return;
     fetch(`/api/files/${file.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-      .then((res) => res.blob())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.blob();
+      })
       .then((blob) => {
         if (!cancelled) {
           blobUrl = URL.createObjectURL(blob);
           setImgSrc(blobUrl);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('图片加载失败 fileId=' + file.id + ':', err.message);
+        if (!cancelled) setImgSrc(null);
+      });
     return () => {
       cancelled = true;
       if (blobUrl) URL.revokeObjectURL(blobUrl);
