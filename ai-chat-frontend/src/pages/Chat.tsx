@@ -98,10 +98,30 @@ export default function Chat() {
         await regenerate(nextAiMsg.id);
         return;
       }
-      // 编辑后无后续 AI 回复 → 直接触发新的 AI 响应
+      // 编辑后无后续 AI 回复 → 从后端重新加载，清理中止残留的消息后再发送
       const convId = editingMessage.conversationId;
       if (convId) {
-        setCurrentConvId(convId);
+        await selectConversation(convId);
+        const msgs = useChatStore.getState().messages;
+        const lastUser = [...msgs].reverse().find(m => m.role === 'user');
+        if (lastUser) {
+          const startIdx = msgs.indexOf(lastUser);
+          const ids = msgs.slice(startIdx).map(m => m.id);
+          for (const id of ids) {
+            await deleteMessage(id);
+          }
+        }
+        const nowISO = new Date().toISOString();
+        appendMessage({
+          id: Date.now(),
+          conversationId: convId,
+          role: 'user',
+          content: text,
+          thinking: null,
+          createdAt: nowISO,
+          dateLabel: getDateLabel(nowISO),
+          files: [],
+        });
         await send(convId, text, [], searchEnabled, selectedModel?.provider, selectedModel?.name);
       }
       return;
