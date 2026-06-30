@@ -12,3 +12,6 @@ application-local.yml
 *.tsbuildinfo
 uploads/
 ai-chat-backend/uploads/
+docs/
+AGENTS.md
+.superpowers/

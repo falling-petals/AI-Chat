@@ -4,14 +4,6 @@ CREATE DATABASE IF NOT EXISTS ai_chat
 
 USE ai_chat;
 
--- ============================================================
--- Migration (2026-06-29): 移除冗余字段
--- 已有数据库执行：
---   ALTER TABLE conversation DROP COLUMN model_provider;
---   ALTER TABLE conversation DROP COLUMN model_name;
---   ALTER TABLE model_config DROP COLUMN is_active;
--- ============================================================
-
 CREATE TABLE user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -73,15 +65,3 @@ CREATE TABLE file (
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
     INDEX idx_user_files (user_id)
 );
-
--- ============================================================
--- Migration (2026-06-27): 对话置顶/归档
--- 已有数据库执行：
---   ALTER TABLE conversation ADD COLUMN pinned TINYINT(1) NOT NULL DEFAULT 0;
---   ALTER TABLE conversation ADD COLUMN archived TINYINT(1) NOT NULL DEFAULT 0;
---   CREATE INDEX idx_user_archived ON conversation(user_id, archived);
--- 
--- Migration (2026-06-27): 文件上传
---   CREATE TABLE file (...);
---   ALTER TABLE message ADD COLUMN file_ids TEXT DEFAULT NULL;
--- ============================================================

@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: ai-chat-backend
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - uploads-data:/app/uploads
+    ports:
+      - "8082:8082"
+
+volumes:
+  uploads-data:
