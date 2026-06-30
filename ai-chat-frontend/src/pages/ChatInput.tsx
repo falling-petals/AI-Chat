@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Paperclip, Search, Square, ArrowUp, ChevronDown } from 'lucide-react';
 import type { UploadFileItem } from '../hooks/useFileUpload';
 import type { ModelInfo } from '../types';
@@ -24,6 +25,7 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({ value, onChange, onSend, onCancelEdit, disabled, errorMessage, editing, uploadedFiles, onUpload, onRemoveFile, searchEnabled, onToggleSearch, streaming, onStop, availableModels, selectedModel, onSelectModel }: ChatInputProps) {
+  const navigate = useNavigate();
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const modelRef = useRef<HTMLDivElement>(null);
 
@@ -142,7 +144,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
               </button>
             </div>
             <div className="flex items-center gap-1">
-              {availableModels.length > 0 && selectedModel && (
+              {availableModels.length > 0 && selectedModel ? (
                 <div className="relative" ref={modelRef}>
                   <button
                     onClick={() => setModelPickerOpen(!modelPickerOpen)}
@@ -176,9 +178,23 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
                           <span className="ml-1.5 text-[10px] text-zinc-400 opacity-60">{m.provider}</span>
                         </button>
                       ))}
+                      <div className="border-t border-zinc-200 dark:border-zinc-700 my-1" />
+                      <button
+                        onClick={() => { setModelPickerOpen(false); navigate('/settings'); }}
+                        className="w-full text-left px-3 py-2 text-xs text-sky-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        管理模型配置 →
+                      </button>
                     </div>
                   )}
                 </div>
+              ) : (
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  配置模型
+                </button>
               )}
               <button
                 onClick={streaming ? onStop : onSend}

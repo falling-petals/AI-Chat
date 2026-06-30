@@ -242,6 +242,15 @@ export default function Chat() {
             <h1 className="text-lg font-medium text-zinc-600 dark:text-zinc-400">
               <TypeWriterText text="How can I help you today?" />
             </h1>
+            {availableModels.length === 0 && (
+              <p className="text-sm text-zinc-400">
+                暂无可用模型，请先在
+                <button onClick={() => navigate('/settings')} className="text-sky-500 hover:text-sky-600 underline mx-1">
+                  设置
+                </button>
+                中配置 AI 模型
+              </p>
+            )}
           </div>
         )}
         <ChatInput
