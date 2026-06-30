@@ -2,19 +2,25 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api/auth';
 import { toast } from 'sonner';
+import { useChatStore } from '../store';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const setToken = useChatStore((s) => s.setToken);
+  const setCurrentConvId = useChatStore((s) => s.setCurrentConvId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(username, password);
-      navigate('/login');
+      const res = await register(username, password);
+      localStorage.setItem('username', res.username);
+      setToken(res.token);
+      setCurrentConvId(null);
+      navigate('/');
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);

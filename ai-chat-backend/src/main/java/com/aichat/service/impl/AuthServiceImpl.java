@@ -39,7 +39,12 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(req.getUsername());
         user.setPasswordHash(hashPassword(req.getPassword()));
         userMapper.insert(user);
-        return Result.success(null);
+        String token = jwtUtil.generate(user.getId(), user.getUsername());
+        Map<String, Object> data = new HashMap<>();
+        data.put("token", token);
+        data.put("username", user.getUsername());
+        data.put("avatar", user.getAvatar());
+        return Result.success(data);
     }
 
     public Result<?> login(LoginRequest req) {

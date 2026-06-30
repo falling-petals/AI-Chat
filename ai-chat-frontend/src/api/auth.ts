@@ -8,8 +8,8 @@ export async function login(username: string, password: string): Promise<LoginRe
   });
 }
 
-export async function register(username: string, password: string): Promise<void> {
-  return request<void>('/auth/register', {
+export async function register(username: string, password: string): Promise<LoginResponse> {
+  return request<LoginResponse>('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
   });
