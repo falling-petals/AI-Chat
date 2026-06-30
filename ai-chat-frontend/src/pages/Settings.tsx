@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Settings as SettingsIcon, Eye, EyeOff, Key, Bookmark, Bot, Info } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Settings as SettingsIcon, Eye, EyeOff, Key, Bookmark, Bot, Info, Copy, Check } from 'lucide-react';
 import { modelConfigApi } from '../api/chat';
 import type { ModelConfig } from '../types';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ export default function Settings() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
   const [showKey, setShowKey] = useState<Record<number, boolean>>({});
+  const [copiedKey, setCopiedKey] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(false);
 
   const loadConfigs = async () => {
@@ -149,6 +150,9 @@ export default function Settings() {
                     </span>
                     <button onClick={() => setShowKey(prev => ({ ...prev, [cfg.id!]: !prev[cfg.id!] }))} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded transition-colors cursor-pointer">
                       {showKey[cfg.id!] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={async () => { try { await navigator.clipboard.writeText(cfg.apiKey); setCopiedKey(prev => ({ ...prev, [cfg.id!]: true })); setTimeout(() => setCopiedKey(prev => ({ ...prev, [cfg.id!]: false })), 2000); } catch {} }} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded transition-colors cursor-pointer" title="复制 API Key">
+                      {copiedKey[cfg.id!] ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                   {cfg.baseUrl && (
