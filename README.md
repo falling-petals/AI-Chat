@@ -1,9 +1,10 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./logo.svg">
-  <img alt="AI Chat" src="./logo.svg" width="120">
-</picture>
-
-# AI Chat
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo.svg">
+    <img alt="AI Chat" src="./logo.svg" width="120">
+  </picture>
+  <h1 align="center">AI Chat</h1>
+</div>
 
 > 现代化全栈 AI 对话应用 — 类 ChatGPT 体验，支持多模型供应商、联网搜索与文件理解。
 
