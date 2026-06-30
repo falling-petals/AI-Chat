@@ -36,12 +36,18 @@ import ChatInput from './ChatInput';
 
 export default function Chat() {
   const navigate = useNavigate();
-  const {
-    conversations, currentConvId, messages,
-    loadConversations, selectConversation, createConversation, deleteConversation,
-    togglePin, toggleArchive,
-    setCurrentConvId, appendMessage, deleteMessage,
-  } = useChatStore();
+  const conversations = useChatStore(s => s.conversations);
+  const currentConvId = useChatStore(s => s.currentConvId);
+  const messages = useChatStore(s => s.messages);
+  const loadConversations = useChatStore(s => s.loadConversations);
+  const selectConversation = useChatStore(s => s.selectConversation);
+  const createConversation = useChatStore(s => s.createConversation);
+  const deleteConversation = useChatStore(s => s.deleteConversation);
+  const togglePin = useChatStore(s => s.togglePin);
+  const toggleArchive = useChatStore(s => s.toggleArchive);
+  const setCurrentConvId = useChatStore(s => s.setCurrentConvId);
+  const appendMessage = useChatStore(s => s.appendMessage);
+  const deleteMessage = useChatStore(s => s.deleteMessage);
 
   const { streaming, streamContent, thinkingContent, errorMessage, send, regenerate, stop } = useChatStream();
   const { files: uploadedFiles, addFiles, removeFile } = useFileUpload();

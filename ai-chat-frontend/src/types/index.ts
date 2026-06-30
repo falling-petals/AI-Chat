@@ -37,6 +37,7 @@ export interface ModelConfig {
 
 export interface FileInfo {
   id: number;
+  tempId?: number;
   originalName: string;
   mimeType: string;
   size: number;

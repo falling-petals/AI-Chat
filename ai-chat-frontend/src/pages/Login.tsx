@@ -21,8 +21,12 @@ export default function Login() {
       setToken(res.token);
       setCurrentConvId(null);
       navigate('/');
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error('登录失败');
+      }
     } finally {
       setLoading(false);
     }

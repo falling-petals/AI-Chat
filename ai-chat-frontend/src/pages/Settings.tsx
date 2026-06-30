@@ -29,9 +29,13 @@ export default function Settings() {
     try {
       const list = await modelConfigApi.list();
       setConfigs(list);
-    } catch (err: any) {
-      toast.error(err.message);
-      if (err.message?.includes('401')) navigate('/login');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+        if (err.message?.includes('401')) navigate('/login');
+      } else {
+        toast.error('加载失败');
+      }
     }
   };
 
@@ -61,8 +65,12 @@ export default function Settings() {
       setShowForm(false);
       toast.success(editingId !== null ? '修改成功' : '添加成功');
       try { await loadConfigs(); } catch { /* refresh failure not critical */ }
-    } catch (err: any) {
-      toast.error(err.message || '保存失败');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message || '保存失败');
+      } else {
+        toast.error('保存失败');
+      }
     } finally {
       setLoading(false);
     }
@@ -84,8 +92,12 @@ export default function Settings() {
       await modelConfigApi.delete(id);
       toast.success('删除成功');
       await loadConfigs();
-    } catch (err: any) {
-      toast.error(err.message || '删除失败');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message || '删除失败');
+      } else {
+        toast.error('删除失败');
+      }
     }
   };
 

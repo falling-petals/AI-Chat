@@ -46,7 +46,8 @@ export function useFileUpload(): UseFileUploadReturn {
   const [files, setFiles] = useState<UploadFileItem[]>([]);
 
   const addFile = useCallback(async (file: File) => {
-    const entry: UploadFileItem = { fileInfo: { id: 0, originalName: file.name, mimeType: file.type, size: file.size }, progress: 0, uploading: true, _tmpId: ++_nextId };
+    const tempId = Date.now() + Math.random();
+    const entry: UploadFileItem = { fileInfo: { id: 0, originalName: file.name, mimeType: file.type, size: file.size, tempId }, progress: 0, uploading: true, _tmpId: ++_nextId };
     setFiles((prev) => [...prev, entry]);
     try {
       const info = await uploadFile(file, (pct) => {

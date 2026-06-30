@@ -46,6 +46,10 @@ public class ModelConfigServiceImpl implements ModelConfigService {
 
     @Transactional(rollbackFor = Exception.class)
     public void update(Long userId, ModelConfig config) {
+        ModelConfig existing = modelConfigMapper.selectById(config.getId());
+        if (existing == null || !existing.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("配置不存在或无权修改");
+        }
         config.setUserId(userId);
         modelConfigMapper.updateById(config);
     }

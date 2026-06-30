@@ -82,7 +82,7 @@ export default function ChatInput({ value, onChange, onSend, onCancelEdit, disab
           {uploadedFiles.length > 0 && (
             <div className="flex gap-2 p-2 border-b border-zinc-200 dark:border-zinc-700">
               {uploadedFiles.map((f) => (
-                <div key={f.fileInfo.id} className="flex items-center gap-1 text-xs text-zinc-500 bg-zinc-100 dark:bg-zinc-800 rounded px-2 py-1">
+                <div key={f.fileInfo.tempId || f.fileInfo.id} className="flex items-center gap-1 text-xs text-zinc-500 bg-zinc-100 dark:bg-zinc-800 rounded px-2 py-1">
                   <FileText className="w-3 h-3" />
                   <span>{f.fileInfo.originalName}</span>
                   <button onClick={() => onRemoveFile(f.fileInfo.id)} className="hover:text-zinc-700 dark:hover:text-zinc-300">×</button>

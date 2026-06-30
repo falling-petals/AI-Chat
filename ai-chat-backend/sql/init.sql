@@ -1,4 +1,6 @@
-CREATE DATABASE IF NOT EXISTS ai_chat DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS ai_chat
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
 
 USE ai_chat;
 
@@ -29,7 +31,8 @@ CREATE TABLE conversation (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    INDEX idx_user_archived (user_id, archived)
+    INDEX idx_user_archived (user_id, archived),
+    INDEX idx_user_pinned (user_id, pinned)
 );
 
 CREATE TABLE message (
@@ -38,9 +41,12 @@ CREATE TABLE message (
     role VARCHAR(20) NOT NULL COMMENT 'user/assistant/system',
     content TEXT DEFAULT NULL,
     thinking TEXT DEFAULT NULL COMMENT '深度思考内容',
+    file_ids TEXT DEFAULT NULL COMMENT '关联文件ID列表，JSON数组',
+    search_enabled TINYINT(1) DEFAULT 0 COMMENT '是否开启了联网搜索',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES conversation(id) ON DELETE CASCADE,
-    INDEX idx_conversation_id (conversation_id)
+    INDEX idx_conversation_id (conversation_id),
+    INDEX idx_conv_created (conversation_id, created_at)
 );
 
 CREATE TABLE model_config (
@@ -67,11 +73,6 @@ CREATE TABLE file (
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
     INDEX idx_user_files (user_id)
 );
-
-ALTER TABLE message ADD COLUMN file_ids TEXT DEFAULT NULL COMMENT '关联文件ID列表，JSON数组';
-
--- Migration (2026-06-29): 记录用户消息是否开启了联网搜索
-ALTER TABLE message ADD COLUMN search_enabled TINYINT(1) DEFAULT 0 COMMENT '是否开启了联网搜索';
 
 -- ============================================================
 -- Migration (2026-06-27): 对话置顶/归档

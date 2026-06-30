@@ -25,9 +25,12 @@ logging:
     org.springframework.ai: DEBUG
 
 jwt:
+  secret: ${JWT_SECRET:changeit-in-production}
   expiration: 86400000
 
 app:
+  cors:
+    allowed-origins: '*'
   upload-dir: ./uploads
   file-extract-max-chars: 50000
   chat-context-size: 30

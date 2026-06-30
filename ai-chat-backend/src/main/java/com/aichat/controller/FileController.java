@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 
 @RestController
@@ -39,17 +41,20 @@ public class FileController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resource> serve(@PathVariable Long id) {
+    public ResponseEntity<Resource> serve(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
         File file = fileService.getById(id);
         if (file == null) return ResponseEntity.notFound().build();
+        if (!file.getUserId().equals(userId)) return ResponseEntity.status(403).build();
 
         Resource resource = fileService.loadAsResource(id);
         String contentType = file.getMimeType() != null ? file.getMimeType() : "application/octet-stream";
+        String encodedFilename = URLEncoder.encode(file.getOriginalName(), StandardCharsets.UTF_8).replace("+", "%20");
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + file.getOriginalName() + "\"")
+                        "inline; filename*=UTF-8''" + encodedFilename)
                 .body(resource);
     }
 

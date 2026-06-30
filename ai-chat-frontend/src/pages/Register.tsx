@@ -15,8 +15,12 @@ export default function Register() {
     try {
       await register(username, password);
       navigate('/login');
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error('注册失败');
+      }
     } finally {
       setLoading(false);
     }
