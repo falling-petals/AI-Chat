@@ -8,6 +8,7 @@ import { useEditMessage } from '../hooks/useEditMessage';
 import { modelApi } from '../api/chat';
 import type { MessageVO, ModelInfo } from '../types';
 import Sidebar from './Sidebar';
+import TypeWriterText from '../components/TypeWriterText';
 
 function getDateLabel(dateStr: string): string {
   const date = new Date(dateStr);
@@ -239,7 +240,7 @@ export default function Chat() {
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
             <img src="/logo.svg" alt="AI Chat" className="w-12 h-12 opacity-60" />
             <h1 className="text-lg font-medium text-zinc-600 dark:text-zinc-400">
-              How can I help you today?
+              <TypeWriterText text="How can I help you today?" />
             </h1>
           </div>
         )}
