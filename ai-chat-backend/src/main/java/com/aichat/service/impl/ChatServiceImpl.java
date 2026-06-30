@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+
 import reactor.core.Disposable;
 import org.apache.tika.Tika;
 
@@ -211,7 +211,7 @@ public class ChatServiceImpl implements ChatService {
             sendEvent(emitter, "error", "请求超时，请重试");
             emitter.complete();
         });
-        emitter.onError(ex -> log.error("SSE error for userId={}: {}", userId, ex.getMessage()));
+        emitter.onError(ex -> { log.error("SSE error for userId={}: {}", userId, ex.getMessage()); emitter.completeWithError(ex); });
         return emitter;
     }
 
@@ -233,93 +233,22 @@ public class ChatServiceImpl implements ChatService {
 
         List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
 
-        // 合并所有系统级内容为一个 SystemMessage
-        StringBuilder systemBuilder = new StringBuilder();
-        if (conv.getSystemPrompt() != null && !conv.getSystemPrompt().isBlank()) {
-            systemBuilder.append(conv.getSystemPrompt()).append("\n\n");
-        }
-
-        final List<SearchResult> searchResults;
-        if (searchEnabled) {
-            searchResults = tavilyService.search(userContent);
-            if (!searchResults.isEmpty()) {
-                systemBuilder.append("以下是来自互联网搜索的相关信息，请参考这些信息来回答用户问题：\n\n");
-                for (int i = 0; i < searchResults.size(); i++) {
-                    SearchResult r = searchResults.get(i);
-                    systemBuilder.append("[").append(i + 1).append("] ").append(r.getTitle()).append("\n");
-                    systemBuilder.append("    来源: ").append(r.getUrl()).append("\n");
-                    systemBuilder.append("    内容: ").append(r.getContent()).append("\n\n");
-                }
-            }
-        } else {
-            searchResults = List.of();
-        }
-
         Set<Long> extractedFileIds = new HashSet<>();
-        if (fileIds != null && !fileIds.isEmpty()) {
-            List<com.aichat.entity.File> fileEntities = fileService.getByIds(fileIds);
-            for (com.aichat.entity.File f : fileEntities) {
-                String extracted = extractTextContent(f);
-                if (extracted != null) {
-                    systemBuilder.append("用户上传了文档「").append(f.getOriginalName()).append("」，其文本内容如下：\n\n");
-                    systemBuilder.append(extracted).append("\n\n");
-                    extractedFileIds.add(f.getId());
-                }
-            }
+        List<SearchResult> searchResults = new ArrayList<>();
+        String systemContent = buildSystemMessage(conv, userContent, searchEnabled, fileIds, searchResults, extractedFileIds);
+        if (!systemContent.isEmpty()) {
+            messages.add(new SystemMessage(systemContent));
         }
 
-        if (!systemBuilder.isEmpty()) {
-            messages.add(new SystemMessage(systemBuilder.toString().strip()));
-        }
-
-        // Load recent conversation history (exclude current message by `before` timestamp)
-        List<com.aichat.entity.Message> historyMsgs = messageMapper.selectRecentContextMessages(
-                conv.getId(), before, chatContextSize);
-        if (!historyMsgs.isEmpty()) {
-            Collections.reverse(historyMsgs);
-            for (com.aichat.entity.Message hMsg : historyMsgs) {
-                if ("user".equals(hMsg.getRole())) {
-                    List<Long> hFileIds = new ArrayList<>();
-                    if (hMsg.getFileIds() != null && !hMsg.getFileIds().isBlank()) {
-                        try {
-                            hFileIds = objectMapper.readValue(hMsg.getFileIds(),
-                                    new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
-                        } catch (Exception ignored) {}
-                    }
-                    messages.add(buildUserMessage(hMsg.getContent() != null ? hMsg.getContent() : "", hFileIds, Set.of()));
-                } else if ("assistant".equals(hMsg.getRole())) {
-                    messages.add(new AssistantMessage(
-                            hMsg.getContent() != null ? hMsg.getContent() : ""));
-                }
-            }
-        }
+        messages.addAll(buildHistoryMessages(conv.getId(), before));
         messages.add(buildUserMessage(userContent, fileIds, extractedFileIds));
 
         StringBuffer fullContent = new StringBuffer();
         StringBuffer fullThinking = new StringBuffer();
 
-        AtomicReference<Disposable> disposableRef = new AtomicReference<>();
         AtomicBoolean savedToDb = new AtomicBoolean(false);
 
-        emitter.onCompletion(() -> {
-            log.debug("SSE onCompletion for userId={}", userId);
-            String partialContent = fullContent.toString();
-            String partialThinking = fullThinking.toString();
-            if (!partialContent.isBlank() || !partialThinking.isBlank()) {
-                    if (!savedToDb.getAndSet(true)) {
-                        Message assistantMsg = new Message();
-                        assistantMsg.setConversationId(conv.getId());
-                        assistantMsg.setRole("assistant");
-                        assistantMsg.setContent(partialContent);
-                        if (!partialThinking.isBlank()) {
-                            assistantMsg.setThinking(partialThinking);
-                        }
-                        messageMapper.insert(assistantMsg);
-                        conversationService.touch(userId, conv.getId());
-                        log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
-                    }
-            }
-        });
+        registerSseCallbacks(emitter, conv, userId, fullContent, fullThinking, savedToDb, userContent);
 
         if (conv.getTitle() == null || conv.getTitle().isBlank()) {
             autoRenameConversation(userId, conv.getId(), userContent);
@@ -370,33 +299,8 @@ public class ChatServiceImpl implements ChatService {
                         sendEvent(emitter, "error", error.getMessage());
                         try { emitter.complete(); } catch (Exception ignored) {}
                     },
-                    () -> {
-                        if (!savedToDb.getAndSet(true)) {
-                            Message assistantMsg = new Message();
-                            assistantMsg.setConversationId(conv.getId());
-                            assistantMsg.setRole("assistant");
-                            assistantMsg.setContent(fullContent.toString());
-                            if (!fullThinking.isEmpty()) {
-                                assistantMsg.setThinking(fullThinking.toString());
-                            }
-                            messageMapper.insert(assistantMsg);
-                            conversationService.touch(userId, conv.getId());
-
-                            if (searchEnabled && !searchResults.isEmpty()) {
-                                try {
-                                    String sourcesJson = objectMapper.writeValueAsString(searchResults);
-                                    sendEvent(emitter, "sources", sourcesJson);
-                                } catch (JsonProcessingException e) {
-                                    log.warn("序列化搜索结果失败", e);
-                                }
-                            }
-
-                            sendEvent(emitter, "done", "{\"messageId\":" + assistantMsg.getId() + "}");
-                        }
-                        try { emitter.complete(); } catch (Exception ignored) {}
-                    }
+                    () -> saveAssistantMessageAndComplete(emitter, conv, userId, fullContent, fullThinking, savedToDb, searchResults, searchEnabled, userContent)
             );
-            disposableRef.set(disposable);
         } catch (Exception e) {
             log.error("Stream setup error: {}", e.getMessage(), e);
             sendEvent(emitter, "error", e.getMessage());
@@ -474,6 +378,118 @@ public class ChatServiceImpl implements ChatService {
                 .build();
     }
 
+    private String buildSystemMessage(Conversation conv, String userContent, boolean searchEnabled, List<Long> fileIds, List<SearchResult> searchResults, Set<Long> extractedFileIds) {
+        StringBuilder systemBuilder = new StringBuilder();
+        if (conv.getSystemPrompt() != null && !conv.getSystemPrompt().isBlank()) {
+            systemBuilder.append(conv.getSystemPrompt()).append("\n\n");
+        }
+
+        if (searchEnabled) {
+            List<SearchResult> results = tavilyService.search(userContent);
+            searchResults.addAll(results);
+            if (!results.isEmpty()) {
+                systemBuilder.append("以下是来自互联网搜索的相关信息，请参考这些信息来回答用户问题：\n\n");
+                for (int i = 0; i < results.size(); i++) {
+                    SearchResult r = results.get(i);
+                    systemBuilder.append("[").append(i + 1).append("] ").append(r.getTitle()).append("\n");
+                    systemBuilder.append("    来源: ").append(r.getUrl()).append("\n");
+                    systemBuilder.append("    内容: ").append(r.getContent()).append("\n\n");
+                }
+            }
+        }
+
+        if (fileIds != null && !fileIds.isEmpty()) {
+            List<com.aichat.entity.File> fileEntities = fileService.getByIds(fileIds);
+            for (com.aichat.entity.File f : fileEntities) {
+                String extracted = extractTextContent(f);
+                if (extracted != null) {
+                    systemBuilder.append("用户上传了文档「").append(f.getOriginalName()).append("」，其文本内容如下：\n\n");
+                    systemBuilder.append(extracted).append("\n\n");
+                    extractedFileIds.add(f.getId());
+                }
+            }
+        }
+
+        return systemBuilder.toString().strip();
+    }
+
+    private List<org.springframework.ai.chat.messages.Message> buildHistoryMessages(Long conversationId, LocalDateTime before) {
+        List<org.springframework.ai.chat.messages.Message> historyMessages = new ArrayList<>();
+        List<com.aichat.entity.Message> historyMsgs = messageMapper.selectRecentContextMessages(
+                conversationId, before, chatContextSize);
+        if (!historyMsgs.isEmpty()) {
+            Collections.reverse(historyMsgs);
+            for (com.aichat.entity.Message hMsg : historyMsgs) {
+                if ("user".equals(hMsg.getRole())) {
+                    List<Long> hFileIds = new ArrayList<>();
+                    if (hMsg.getFileIds() != null && !hMsg.getFileIds().isBlank()) {
+                        try {
+                            hFileIds = objectMapper.readValue(hMsg.getFileIds(),
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
+                        } catch (Exception ignored) {}
+                    }
+                    historyMessages.add(buildUserMessage(hMsg.getContent() != null ? hMsg.getContent() : "", hFileIds, Set.of()));
+                } else if ("assistant".equals(hMsg.getRole())) {
+                    historyMessages.add(new AssistantMessage(
+                            hMsg.getContent() != null ? hMsg.getContent() : ""));
+                }
+            }
+        }
+        return historyMessages;
+    }
+
+    private void registerSseCallbacks(SseEmitter emitter, Conversation conv, Long userId, StringBuffer fullContent, StringBuffer fullThinking, AtomicBoolean savedToDb, String firstUserMessage) {
+        emitter.onCompletion(() -> {
+            log.debug("SSE onCompletion for userId={}", userId);
+            String partialContent = fullContent.toString();
+            String partialThinking = fullThinking.toString();
+            if (!partialContent.isBlank() || !partialThinking.isBlank()) {
+                if (!savedToDb.getAndSet(true)) {
+                    Message assistantMsg = new Message();
+                    assistantMsg.setConversationId(conv.getId());
+                    assistantMsg.setRole("assistant");
+                    assistantMsg.setContent(partialContent);
+                    if (!partialThinking.isBlank()) {
+                        assistantMsg.setThinking(partialThinking);
+                    }
+                    messageMapper.insert(assistantMsg);
+                    conversationService.touch(userId, conv.getId());
+                    log.debug("停止生成，已保存部分 AI 回复 ({} 字符)", partialContent.length());
+                }
+            }
+        });
+    }
+
+    private void saveAssistantMessageAndComplete(SseEmitter emitter, Conversation conv, Long userId, StringBuffer fullContent, StringBuffer fullThinking, AtomicBoolean savedToDb, List<SearchResult> searchResults, boolean searchEnabled, String firstUserMessage) {
+        if (!savedToDb.getAndSet(true)) {
+            Message assistantMsg = new Message();
+            assistantMsg.setConversationId(conv.getId());
+            assistantMsg.setRole("assistant");
+            assistantMsg.setContent(fullContent.toString());
+            if (!fullThinking.isEmpty()) {
+                assistantMsg.setThinking(fullThinking.toString());
+            }
+            messageMapper.insert(assistantMsg);
+            conversationService.touch(userId, conv.getId());
+
+            if (firstUserMessage != null && !firstUserMessage.isBlank()) {
+                autoRenameConversation(userId, conv.getId(), firstUserMessage);
+            }
+
+            if (searchEnabled && !searchResults.isEmpty()) {
+                try {
+                    String sourcesJson = objectMapper.writeValueAsString(searchResults);
+                    sendEvent(emitter, "sources", sourcesJson);
+                } catch (JsonProcessingException e) {
+                    log.warn("序列化搜索结果失败", e);
+                }
+            }
+
+            sendEvent(emitter, "done", "{\"messageId\":" + assistantMsg.getId() + "}");
+        }
+        try { emitter.complete(); } catch (Exception ignored) {}
+    }
+
     private void sendError(SseEmitter emitter, String msg) {
         sendEvent(emitter, "error", msg);
         emitter.complete();
@@ -482,7 +498,7 @@ public class ChatServiceImpl implements ChatService {
     private void sendEvent(SseEmitter emitter, String name, String data) {
         try {
             emitter.send(SseEmitter.event().name(name).data(data));
-        } catch (IOException | IllegalStateException ignored) {}
+        } catch (IOException | IllegalStateException e) { log.debug("发送SSE事件失败: {}", e.getMessage()); }
     }
 
     void autoRenameConversation(Long userId, Long convId, String userContent) {
@@ -497,9 +513,12 @@ public class ChatServiceImpl implements ChatService {
             if (conv != null && (conv.getTitle() == null || conv.getTitle().isBlank())) {
                 conv.setTitle(title);
                 conversationService.update(userId, conv);
+                log.info("会话自动命名成功: convId={}, title={}", convId, title);
+            } else {
+                log.debug("会话已有标题，跳过自动命名: convId={}, title='{}'", convId, conv != null ? conv.getTitle() : "null");
             }
         } catch (Exception e) {
-            log.warn("Auto-rename failed: {}", e.getMessage());
+            log.warn("Auto-rename failed for convId={}: {}", convId, e.getMessage(), e);
         }
     }
 }

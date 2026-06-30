@@ -6,6 +6,7 @@ import com.aichat.dto.UpdateConversationRequest;
 import com.aichat.entity.Conversation;
 import com.aichat.service.ConversationService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class ConversationController {
     }
 
     @PostMapping
-    public Result<Long> create(HttpServletRequest request, @RequestBody CreateConversationRequest req) {
+    public Result<Long> create(HttpServletRequest request, @RequestBody @Valid CreateConversationRequest req) {
         Long userId = (Long) request.getAttribute("userId");
         Conversation conv = new Conversation();
         conv.setTitle(req.getTitle());
@@ -43,7 +44,7 @@ public class ConversationController {
     }
 
     @PutMapping("/{id}")
-    public Result<?> update(HttpServletRequest request, @PathVariable Long id, @RequestBody UpdateConversationRequest req) {
+    public Result<?> update(HttpServletRequest request, @PathVariable Long id, @RequestBody @Valid UpdateConversationRequest req) {
         Long userId = (Long) request.getAttribute("userId");
         Conversation conv = new Conversation();
         conv.setId(id);

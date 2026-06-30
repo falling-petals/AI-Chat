@@ -14,10 +14,20 @@ import org.springframework.web.multipart.MultipartFile;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
+
+    private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
+            "image/jpeg", "image/png", "image/gif", "image/webp",
+            "application/pdf",
+            "text/plain",
+            "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
 
     private final FileService fileService;
 
@@ -29,6 +39,10 @@ public class FileController {
     public Result<File> upload(HttpServletRequest request, @RequestParam("file") MultipartFile multipartFile) {
         Long userId = (Long) request.getAttribute("userId");
         if (multipartFile.isEmpty()) return Result.error(400, "文件为空");
+        String contentType = multipartFile.getContentType();
+        if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType)) {
+            return Result.error(400, "不支持的文件类型: " + contentType);
+        }
         try {
             File file = fileService.upload(userId, null,
                     multipartFile.getOriginalFilename(),

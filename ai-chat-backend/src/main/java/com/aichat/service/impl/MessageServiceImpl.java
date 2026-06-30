@@ -6,6 +6,7 @@ import com.aichat.mapper.MessageMapper;
 import com.aichat.service.FileService;
 import com.aichat.service.MessageService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +20,12 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageMapper messageMapper;
     private final FileService fileService;
+    private final ObjectMapper objectMapper;
 
-    public MessageServiceImpl(MessageMapper messageMapper, FileService fileService) {
+    public MessageServiceImpl(MessageMapper messageMapper, FileService fileService, ObjectMapper objectMapper) {
         this.messageMapper = messageMapper;
         this.fileService = fileService;
+        this.objectMapper = objectMapper;
     }
 
     public List<MessageVO> listByConversation(Long conversationId) {
@@ -46,7 +49,7 @@ public class MessageServiceImpl implements MessageService {
         if (msg.getFileIds() != null && !msg.getFileIds().isBlank()) {
             try {
                 com.fasterxml.jackson.core.type.TypeReference<List<Long>> typeRef = new com.fasterxml.jackson.core.type.TypeReference<>() {};
-                List<Long> ids = new com.fasterxml.jackson.databind.ObjectMapper().readValue(msg.getFileIds(), typeRef);
+                List<Long> ids = objectMapper.readValue(msg.getFileIds(), typeRef);
                 vo.setFiles(fileService.getByIds(ids));
             } catch (Exception e) {
                 vo.setFiles(java.util.Collections.emptyList());

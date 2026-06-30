@@ -12,6 +12,7 @@ import com.aichat.service.ConversationService;
 import com.aichat.service.MessageService;
 import com.aichat.service.ModelConfigService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -57,7 +58,7 @@ public class ChatController {
     }
 
     @PostMapping("/stream")
-    public SseEmitter stream(HttpServletRequest request, @RequestBody ChatRequest chatRequest) {
+    public SseEmitter stream(HttpServletRequest request, @RequestBody @Valid ChatRequest chatRequest) {
         Long userId = (Long) request.getAttribute("userId");
         return chatService.stream(userId, chatRequest.getConversationId(), chatRequest.getContent(), chatRequest.getFileIds(), chatRequest.getSearchEnabled(), chatRequest.getModelProvider(), chatRequest.getModelName());
     }
